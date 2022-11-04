@@ -93,16 +93,23 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
   globals.interpreter.runForMultipleInputs(inputs, outputs);
 
   // ---- Set recognitions
+  globals.recognitions = outputs;
   globals.recognitionsNotifier.value = globals.recognitionsNotifier.value * -1;
 
   // Print
   printTitle("(3) Tensorflow processed");
   if (numLocations.getIntValue(0) > 0) {
     printTitle("(4) Detected objects:");
-    printMessage(outputLocations);
     for (int i = 0; i < numLocations.getIntValue(0); i++) {
-      printMessage(
-          "Detected: ${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
+      if (outputScores.getDoubleValue(i) * 100 > 60) {
+        printMessage(
+            "Detected: ${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
+        printMessage(
+            globals.labels.elementAt(outputClasses.getIntValue(i + 1)));
+        printMessage(outputLocations.buffer.asByteData());
+        printMessage(
+            outputLocations.buffer.asByteData().buffer.asFloat32List());
+      }
     }
   }
 
