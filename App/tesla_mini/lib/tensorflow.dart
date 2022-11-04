@@ -4,30 +4,21 @@
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:tflite/tflite.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
 import 'globals.dart' as globals;
 import 'package:tesla_mini/debugger.dart';
 
-Future<void> tfLoadFirebase() async {
-  await Firebase.initializeApp();
-  printMessage('Firebase active');
-}
-
 // Load the models
 void tfLoadModel(modelName) async {
-  // Load Firebase models
-  FirebaseCustomModel model = await FirebaseModelDownloader.instance
-      .getModel(modelName, FirebaseModelDownloadType.latestModel);
-  var localModelPath = model.file.path;
-  printMessage('Loaded model: ${model.name}');
-
   // Extra check that Tensorflow closed properly last time
   Tflite.close();
   // Load models
   String? res = await Tflite.loadModel(
       model: "assets/model.tflite", labels: "assets/labels.txt");
   printMessage('Tensorflow models: $res');
+}
+
+double round(inputValue, decimals) {
+  return double.parse((inputValue).toStringAsFixed(decimals));
 }
 
 Future<void> tfProcessFrame(CameraImage image) async {
@@ -52,7 +43,7 @@ Future<void> tfProcessFrame(CameraImage image) async {
   if (globals.recognitions != null) {
     printTitle("(4) Detected objects:");
     printMessage(globals.recognitions.map((result) {
-      return "${result['detectedClass']} | ${result['rect']['x']}, ${result['rect']['y']} | ${result['rect']['w']}, ${result['rect']['h']}}";
+      return "${result['detectedClass']} | ${round((result['confidenceInClass'] * 100), 0)}%";
     }).toString());
   }
 

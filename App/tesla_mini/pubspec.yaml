@@ -38,8 +38,6 @@ dependencies:
   restart_app:
   network_info_plus: 
   tflite:
-  firebase_core:
-  firebase_ml_model_downloader: 
 
 dependency_overrides:
   camera_android: 0.9.7+1
