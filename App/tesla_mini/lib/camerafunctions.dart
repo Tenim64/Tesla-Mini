@@ -3,19 +3,19 @@ import 'package:camera/camera.dart';
 import 'package:tesla_mini/globals.dart';
 import 'package:tesla_mini/tensorflow.dart';
 import 'package:tesla_mini/udpserver.dart';
-
+import 'package:tesla_mini/debugger.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/foundation.dart';
 
 // Process a single image
 void focusCamera(CameraController controller) async {
-  debugPrint('Focusing');
+  printMessage('Focusing');
   controller.setFocusMode(FocusMode.auto);
 }
 
 // Start image stream
 void startCamera(CameraController controller) {
-  debugPrint('Starting'); // Print in debug console
+  printMessage('Starting'); // Print in debug console
   controller.setFlashMode(FlashMode.off); // Disable camera flash
 
   recognitionsNotifier.value = 1;
@@ -26,7 +26,7 @@ void startCamera(CameraController controller) {
       processImage(image); // Process new image
     });
   } catch (err) {
-    debugPrint('Already running');
+    printMessage('Already running');
   }
 
   sendDataUDP('state', 'Starting'); // Send signal to http server
@@ -34,14 +34,14 @@ void startCamera(CameraController controller) {
 
 // Stop image stream
 void stopCamera(CameraController controller) {
-  debugPrint('Stopping'); // Print in debug console
+  printMessage('Stopping'); // Print in debug console
 
   recognitionsNotifier.value = 0;
 
   try {
     controller.stopImageStream(); // Stop image stream
   } catch (err) {
-    debugPrint('Wasn\'t running');
+    printMessage('Wasn\'t running');
   }
 
   sendDataUDP('state', 'Stopping'); // Send signal to http server
@@ -56,7 +56,7 @@ void processImage(CameraImage image) async {
     isProcessing = true;
   }
 
-  debugPrint("1) New image: ${DateTime.now()}"); // Print in debug console
+  printMessage("1) New image: ${DateTime.now()}"); // Print in debug console
 
   // Tensorflow
   await tfProcessFrame(image);
@@ -65,7 +65,7 @@ void processImage(CameraImage image) async {
 }
 
 void sendFrame(photo) async {
-  debugPrint("Uploading image"); // Print in debug console
+  printMessage("Uploading image"); // Print in debug console
 
   // Convert Camera image to image
   img.Image image = img.Image.fromBytes(

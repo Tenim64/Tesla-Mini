@@ -2,6 +2,7 @@
 import 'package:flutter/foundation.dart';
 import 'dart:convert' as convert;
 import 'package:http/http.dart' as http;
+import 'package:tesla_mini/debugger.dart';
 
 // Default http server address
 const httpServerAddress = 'http://192.168.1.53:8080';
@@ -21,7 +22,7 @@ void sendDataHTTP(String title, String data) {
 
 Future<http.Response> sendRequestHTTP(String title, String data) {
   // Print in debug console
-  debugPrint("Send data: $title");
+  printMessage("Send data: $title");
 
   // Post to http server
   return http.post(

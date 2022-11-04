@@ -6,22 +6,23 @@ import 'package:tesla_mini/tensorflow.dart';
 import 'package:tesla_mini/ui.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:tflite/tflite.dart';
-import 'package:firebase_core/firebase_core.dart';
+import 'package:tesla_mini/debugger.dart';
 
 // List for cameras
 List<CameraDescription> cameras = [];
 
 // Main app
 Future<void> main() async {
-  debugPrint('Starting software');
+  printMessage('Starting software');
 
   WidgetsFlutterBinding.ensureInitialized();
 
-  await Firebase.initializeApp();
+  // Load Firebase
+  await tfLoadFirebase();
 
   FlutterError.onError = (details) {
-    debugPrint(details.exception.toString()); // the uncaught exception
-    debugPrint(details.stack.toString()); // the stack trace at the time
+    printErrorMessage(details.exception.toString()); // the uncaught exception
+    printErrorMessage(details.stack.toString()); // the stack trace at the time
   };
 
   Wakelock.enable();
@@ -87,7 +88,7 @@ class CameraScreenState extends State<CameraScreen> {
     _initializeControllerFuture = _controller.initialize();
 
     // Load Tensorflow models
-    tfLoadModel();
+    tfLoadModel('Android');
   }
 
   @override
