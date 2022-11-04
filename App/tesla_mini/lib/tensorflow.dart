@@ -1,13 +1,17 @@
 // Packages
 // ignore_for_file: avoid_function_literals_in_foreach_calls
 
+import 'dart:math';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:tflite/tflite.dart';
-import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
 import 'globals.dart' as globals;
 import 'package:tesla_mini/debugger.dart';
+import 'package:image/image.dart' as imageLib;
+import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
+import 'package:tflite/tflite.dart';
+import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
+import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 
 Future<void> tfLoadFirebase() async {
   await Firebase.initializeApp();
@@ -17,43 +21,89 @@ Future<void> tfLoadFirebase() async {
 // Load the models
 void tfLoadModel(modelName) async {
   // Load Firebase models
+  /*
   FirebaseCustomModel model = await FirebaseModelDownloader.instance
       .getModel(modelName, FirebaseModelDownloadType.latestModel);
   var localModelPath = model.file.path;
-  printMessage('Loaded model: ${model.name}');
+  printMessage('Found model: ${model.name}');
+  */
 
   // Extra check that Tensorflow closed properly last time
-  Tflite.close();
+  if (globals.interpreter != null) {
+    globals.interpreter.close();
+  }
   // Load models
-  String? res = await Tflite.loadModel(
-      model: "assets/model.tflite", labels: "assets/labels.txt");
-  printMessage('Tensorflow models: $res');
+  try {
+    globals.interpreter = await tfl.Interpreter.fromAsset('model.tflite');
+    globals.labels = await FileUtil.loadLabels("assets/labels.txt");
+    printMessage('Tensorflow model loaded');
+  } catch (e) {
+    printMessage('Error loading model: ${e..toString()}');
+  }
 }
 
-Future<void> tfProcessFrame(CameraImage image) async {
+Future<void> tfProcessFrame(imageLib.Image rawImage) async {
   printTitle("(2) Tensorflow processing");
 
-  globals.recognitions = await Tflite.detectObjectOnFrame(
-    bytesList: image.planes.map((plane) {
-      return plane.bytes;
-    }).toList(),
-    imageHeight: image.height,
-    imageWidth: image.width,
-    imageMean: 127.5,
-    imageStd: 127.5,
-    numResultsPerClass: 3,
-    threshold: 0.4,
-    model: "SSDMobileNet",
-  );
+  // ---- Constants
+  /// Input size of image (height = width = 300)
+  const int INPUT_SIZE = 300;
 
+  /// Result score threshold
+  const double THRESHOLD = 0.5;
+
+  // ---- Input values
+  /// Pre-process the image
+  TensorImage getProcessedImage(TensorImage inputImage) {
+    int padSize = max(inputImage.height, inputImage.width);
+    ImageProcessor imageProcessor = ImageProcessorBuilder()
+        .add(ResizeWithCropOrPadOp(padSize, padSize))
+        .add(ResizeOp(INPUT_SIZE, INPUT_SIZE, ResizeMethod.BILINEAR))
+        .build();
+    inputImage = imageProcessor.process(inputImage);
+    return inputImage;
+  }
+
+  List<Object> inputs = [
+    (getProcessedImage(TensorImage.fromImage(rawImage))).buffer
+  ];
+
+  // ---- Output values
+  var outputTensors = globals.interpreter.getOutputTensors();
+
+  /// Types of output tensors
+  List<List<int>> outputShapes = [];
+  outputTensors.forEach((tensor) {
+    outputShapes.add(tensor.shape);
+  });
+  // TensorBuffers for output tensors
+  TensorBuffer outputLocations = TensorBufferFloat(outputShapes[0]);
+  TensorBuffer outputClasses = TensorBufferFloat(outputShapes[1]);
+  TensorBuffer outputScores = TensorBufferFloat(outputShapes[2]);
+  TensorBuffer numLocations = TensorBufferFloat(outputShapes[3]);
+  // Outputs map
+  Map<int, Object> outputs = {
+    0: outputLocations.buffer,
+    1: outputClasses.buffer,
+    2: outputScores.buffer,
+    3: numLocations.buffer,
+  };
+
+  // ---- Run model
+  globals.interpreter.runForMultipleInputs(inputs, outputs);
+
+  // ---- Set recognitions
   globals.recognitionsNotifier.value = globals.recognitionsNotifier.value * -1;
 
+  // Print
   printTitle("(3) Tensorflow processed");
-  if (globals.recognitions != null) {
+  if (numLocations.getIntValue(0) > 0) {
     printTitle("(4) Detected objects:");
-    printMessage(globals.recognitions.map((result) {
-      return "${result['detectedClass']} | ${result['rect']['x']}, ${result['rect']['y']} | ${result['rect']['w']}, ${result['rect']['h']}}";
-    }).toString());
+    printMessage(outputLocations);
+    for (int i = 0; i < numLocations.getIntValue(0); i++) {
+      printMessage(
+          "Detected: ${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
+    }
   }
 
   return;

@@ -1,11 +1,15 @@
 // Packages
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:tesla_mini/globals.dart';
+import 'package:tesla_mini/otherfunctions.dart';
 import 'package:tesla_mini/tensorflow.dart';
 import 'package:tesla_mini/udpserver.dart';
 import 'package:tesla_mini/debugger.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/foundation.dart';
+import 'package:tesla_mini/imageconverter.dart';
 
 // Process a single image
 void focusCamera(CameraController controller) async {
@@ -56,10 +60,15 @@ void processImage(CameraImage image) async {
     isProcessing = true;
   }
 
-  printMessage("1) New image: ${DateTime.now()}"); // Print in debug console
+  printMessage("(1) New image: ${DateTime.now()}"); // Print in debug console
 
   // Tensorflow
-  await tfProcessFrame(image);
+  try {
+    await tfProcessFrame(ImageUtils.convertYUV420ToImage(image));
+  } catch (e) {
+    printErrorMessage(e);
+    exit(0);
+  }
 
   isProcessing = false;
 }
