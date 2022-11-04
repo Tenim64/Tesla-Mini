@@ -8,6 +8,3 @@ var recognitions;
 // 0 = disabled
 // 1 / -1 = enabled
 final recognitionsNotifier = ValueNotifier<int>(0);
-
-var interpreter;
-List<String> labels = [];
