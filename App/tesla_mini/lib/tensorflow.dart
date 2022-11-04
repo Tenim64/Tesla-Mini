@@ -42,9 +42,12 @@ Future<void> tfProcessFrame(CameraImage image) async {
   printTitle("(3) Tensorflow processed");
   if (globals.recognitions != null) {
     printTitle("(4) Detected objects:");
-    printMessage(globals.recognitions.map((result) {
-      return "${result['detectedClass']} | ${round((result['confidenceInClass'] * 100), 0)}%";
-    }).toString());
+    printMessage(globals.recognitions
+        .map((result) {
+          return "${result['detectedClass']}: ${round((result['confidenceInClass'] * 100), 0)}% ";
+        })
+        .toString()
+        .replaceAll(',', '|'));
   }
 
   return;
@@ -59,7 +62,7 @@ List<Widget> displayBoxesAroundRecognizedObjects(Size screen) {
 
   Color colorPick = Colors.pink;
 
-  printMessage("(updated boxes) | List: ${recognitionsList.toString()}");
+  printMessage("(updated boxes)");
   return recognitionsList.map<Widget>((result) {
     if (result['confidenceInClass'] * 100 < 60) {
       return const Positioned(
