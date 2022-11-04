@@ -1,5 +1,4 @@
 // Packages
-import 'package:flutter/foundation.dart';
 import 'dart:io';
 import 'dart:core';
 import 'package:network_info_plus/network_info_plus.dart';

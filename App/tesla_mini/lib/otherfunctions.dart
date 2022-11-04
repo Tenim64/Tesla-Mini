@@ -1,5 +1,4 @@
 // Packages
-import 'package:flutter/foundation.dart';
 import 'package:restart_app/restart_app.dart';
 import 'package:tesla_mini/debugger.dart';
 
