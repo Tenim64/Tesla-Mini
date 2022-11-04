@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "276057013933",
+    "project_id": "tesla-mini",
+    "storage_bucket": "tesla-mini.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:276057013933:android:447db81cc27f0392c35024",
+        "android_client_info": {
+          "package_name": "com.example.tesla_mini"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "276057013933-n4q5sf26hbdrt2c7i8fv1irivjbes5rs.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBC4ZS2zHBxLIaLOiNBFnUXcRbx8ZmN_u4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "276057013933-n4q5sf26hbdrt2c7i8fv1irivjbes5rs.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
