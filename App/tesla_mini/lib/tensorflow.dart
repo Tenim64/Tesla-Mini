@@ -33,7 +33,7 @@ Future<void> tfProcessFrame(CameraImage image) async {
     imageMean: 127.5,
     imageStd: 127.5,
     numResultsPerClass: 3,
-    threshold: 0.4,
+    threshold: 0.6,
     model: "SSDMobileNet",
   );
 
@@ -64,10 +64,6 @@ List<Widget> displayBoxesAroundRecognizedObjects(Size screen) {
 
   printMessage("(updated boxes)");
   return recognitionsList.map<Widget>((result) {
-    if (result['confidenceInClass'] * 100 < 60) {
-      return const Positioned(
-          left: 0, top: 0, width: 0, height: 0, child: SizedBox.shrink());
-    }
     return Positioned(
       left: result["rect"]["x"] * factorX,
       top: result["rect"]["y"] * factorY,
