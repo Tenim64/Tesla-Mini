@@ -17,6 +17,9 @@ Future<void> main() async {
 
   WidgetsFlutterBinding.ensureInitialized();
 
+  // Load Firebase
+  //await tfLoadFirebase();
+
   FlutterError.onError = (details) {
     printErrorMessage(details.exception.toString()); // the uncaught exception
     printErrorMessage(details.stack.toString()); // the stack trace at the time
