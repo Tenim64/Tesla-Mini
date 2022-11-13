@@ -2,8 +2,9 @@
     package="com.example.tesla_mini">
     <uses-permission android:name="android.permission.INTERNET"/>
    <application
-        android:label="tesla_mini"
+        android:label="Tesla Mini"
         android:name="${applicationName}"
+        android:roundIcon="@mipmap/round_launcher"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
