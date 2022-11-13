@@ -1,6 +1,5 @@
 import 'package:camera/camera.dart';
 import 'package:image/image.dart' as imagelib;
-import 'package:tesla_mini/debugger.dart';
 
 /// ImageUtils
 class ImageUtils {
@@ -48,5 +47,3 @@ class ImageUtils {
         (r & 0xff);
   }
 }
-
-class Image {}
