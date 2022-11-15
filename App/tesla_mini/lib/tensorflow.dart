@@ -9,7 +9,6 @@ import 'package:tesla_mini/debugger.dart';
 import 'package:image/image.dart' as imageLib;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
-import 'package:tflite/tflite.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 
@@ -67,6 +66,7 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
   List<Object> inputs = [
     (getProcessedImage(TensorImage.fromImage(rawImage))).buffer
   ];
+  printMessage("(2.1) Input ready");
 
   // ---- Output values
   var outputTensors = globals.interpreter.getOutputTensors();
@@ -88,13 +88,16 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
     2: outputScores.buffer,
     3: numLocations.buffer,
   };
+  printMessage("(2.2) Output ready");
 
   // ---- Run model
   globals.interpreter.runForMultipleInputs(inputs, outputs);
+  printMessage("(2.3) Model ran");
 
   // ---- Set recognitions
   globals.recognitions = outputs;
   globals.recognitionsNotifier.value = globals.recognitionsNotifier.value * -1;
+  printMessage("(2.4) Output received");
 
   // Print
   printTitle("(3) Tensorflow processed");
