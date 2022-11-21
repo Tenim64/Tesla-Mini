@@ -35,6 +35,7 @@ void tfLoadModel(modelName) async {
   try {
     globals.interpreter = await tfl.Interpreter.fromAsset('model.tflite');
     globals.labels = await FileUtil.loadLabels("assets/labels.txt");
+    printMessage(globals.labels);
     printMessage('Tensorflow model loaded');
   } catch (e) {
     printMessage('Error loading model: ${e..toString()}');
@@ -44,12 +45,11 @@ void tfLoadModel(modelName) async {
 Future<void> tfProcessFrame(imageLib.Image rawImage) async {
   printTitle("(2) Tensorflow processing");
 
-  // ---- Constants
-  /// Input size of image (height = width = 300)
-  const int INPUT_SIZE = 300;
-
-  /// Result score threshold
-  const double THRESHOLD = 0.5;
+  // ---- Interpreter Tensors
+  var inputTensor = globals.interpreter.getInputTensor(0);
+  var outputTensors = globals.interpreter.getOutputTensors();
+  printMessage("Input: $inputTensor");
+  printMessage("Output: $outputTensors");
 
   // ---- Input values
   /// Pre-process the image
@@ -57,20 +57,20 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
     int padSize = max(inputImage.height, inputImage.width);
     ImageProcessor imageProcessor = ImageProcessorBuilder()
         .add(ResizeWithCropOrPadOp(padSize, padSize))
-        .add(ResizeOp(INPUT_SIZE, INPUT_SIZE, ResizeMethod.BILINEAR))
+        .add(ResizeOp(
+            inputTensor.shape[1], inputTensor.shape[2], ResizeMethod.BILINEAR))
         .build();
     inputImage = imageProcessor.process(inputImage);
     return inputImage;
   }
 
-  List<Object> inputs = [
-    (getProcessedImage(TensorImage.fromImage(rawImage))).buffer
-  ];
+  /// Input
+  TensorImage inputImage = TensorImage(inputTensor.type);
+  inputImage.loadImage(rawImage);
+  inputImage = getProcessedImage(inputImage);
   printMessage("(2.1) Input ready");
 
   // ---- Output values
-  var outputTensors = globals.interpreter.getOutputTensors();
-
   /// Types of output tensors
   List<List<int>> outputShapes = [];
   outputTensors.forEach((tensor) {
@@ -91,7 +91,7 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
   printMessage("(2.2) Output ready");
 
   // ---- Run model
-  globals.interpreter.runForMultipleInputs(inputs, outputs);
+  globals.interpreter.runForMultipleInputs([inputImage.buffer], outputs);
   printMessage("(2.3) Model ran");
 
   // ---- Set recognitions
@@ -102,20 +102,26 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
   // Print
   printTitle("(3) Tensorflow processed");
   if (numLocations.getIntValue(0) > 0) {
-    printTitle("(4) Detected objects:");
-    for (int i = 0; i < numLocations.getIntValue(0); i++) {
+    printTitle("(4) Detected objects (= ${numLocations.getIntValue(0)}):");
+    for (var i = 0; i < outputClasses.getFlatSize(); i++) {
+      printMessage("Output classes: ${outputClasses.getDoubleValue(i)}");
+    }
+    for (var i = 0; i < outputScores.getFlatSize(); i++) {
+      printMessage("Output scores: ${outputScores.getDoubleValue(i)}");
+    }
+    for (var i = 0; i < outputLocations.getFlatSize(); i++) {
+      printMessage("Output locations: ${outputLocations.getDoubleValue(i)}");
+    }
+    printMessage("Output numLocations: ${numLocations.getIntValue(0)}");
+    for (var i = 0; i < numLocations.getIntValue(0); i++) {
+      printMessage(
+          "Output $i: ${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
       if (outputScores.getDoubleValue(i) * 100 > 60) {
         printMessage(
             "Detected: ${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
-        printMessage(
-            globals.labels.elementAt(outputClasses.getIntValue(i + 1)));
-        printMessage(outputLocations.buffer.asByteData());
-        printMessage(
-            outputLocations.buffer.asByteData().buffer.asFloat32List());
       }
     }
   }
-
   return;
 }
 
