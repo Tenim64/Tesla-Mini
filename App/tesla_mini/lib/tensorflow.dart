@@ -12,6 +12,8 @@ import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 
+const modelType = "BelgiumTS";
+
 Future<void> tfLoadFirebase() async {
   await Firebase.initializeApp();
   printMessage('Firebase active');
@@ -48,8 +50,6 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
   // ---- Interpreter Tensors
   var inputTensor = globals.interpreter.getInputTensor(0);
   var outputTensors = globals.interpreter.getOutputTensors();
-  printMessage("Input: $inputTensor");
-  printMessage("Output: $outputTensors");
 
   // ---- Input values
   /// Pre-process the image
@@ -77,17 +77,30 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
     outputShapes.add(tensor.shape);
   });
   // TensorBuffers for output tensors
-  TensorBuffer outputLocations = TensorBufferFloat(outputShapes[0]);
-  TensorBuffer outputClasses = TensorBufferFloat(outputShapes[1]);
-  TensorBuffer outputScores = TensorBufferFloat(outputShapes[2]);
-  TensorBuffer numLocations = TensorBufferFloat(outputShapes[3]);
+  TensorBuffer outputLocations =
+      TensorBufferFloat(outputShapes[globals.locationsIndex]);
+  TensorBuffer outputClasses =
+      TensorBufferFloat(outputShapes[globals.classesIndex]);
+  TensorBuffer outputScores =
+      TensorBufferFloat(outputShapes[globals.scoresIndex]);
+  TensorBuffer numLocations = TensorBufferFloat(outputShapes[globals.numIndex]);
   // Outputs map
-  Map<int, Object> outputs = {
-    0: outputLocations.buffer,
-    1: outputClasses.buffer,
-    2: outputScores.buffer,
-    3: numLocations.buffer,
-  };
+  Map<int, Object> outputs;
+  if (modelType == "BelgiumTS") {
+    outputs = {
+      globals.locationsIndex: outputLocations.buffer,
+      globals.classesIndex: outputClasses.buffer,
+      globals.scoresIndex: outputScores.buffer,
+      globals.numIndex: numLocations.buffer,
+    };
+  } else {
+    outputs = {
+      0: outputLocations.buffer,
+      1: outputClasses.buffer,
+      2: outputScores.buffer,
+      3: numLocations.buffer,
+    };
+  }
   printMessage("(2.2) Output ready");
 
   // ---- Run model
@@ -95,30 +108,20 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
   printMessage("(2.3) Model ran");
 
   // ---- Set recognitions
+  printMessage("(2.4) Output: $outputs");
   globals.recognitions = outputs;
+  printMessage("(2.5) Recognitions: ${globals.recognitions}");
   globals.recognitionsNotifier.value = globals.recognitionsNotifier.value * -1;
-  printMessage("(2.4) Output received");
+  printMessage("(2.6) Notifier: ${globals.recognitionsNotifier.value}");
 
   // Print
   printTitle("(3) Tensorflow processed");
   if (numLocations.getIntValue(0) > 0) {
     printTitle("(4) Detected objects (= ${numLocations.getIntValue(0)}):");
-    for (var i = 0; i < outputClasses.getFlatSize(); i++) {
-      printMessage("Output classes: ${outputClasses.getDoubleValue(i)}");
-    }
-    for (var i = 0; i < outputScores.getFlatSize(); i++) {
-      printMessage("Output scores: ${outputScores.getDoubleValue(i)}");
-    }
-    for (var i = 0; i < outputLocations.getFlatSize(); i++) {
-      printMessage("Output locations: ${outputLocations.getDoubleValue(i)}");
-    }
-    printMessage("Output numLocations: ${numLocations.getIntValue(0)}");
     for (var i = 0; i < numLocations.getIntValue(0); i++) {
-      printMessage(
-          "Output $i: ${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
+      //printMessage("Output $i: ${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
       if (outputScores.getDoubleValue(i) * 100 > 60) {
-        printMessage(
-            "Detected: ${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
+        //printMessage("Detected: ${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
       }
     }
   }
@@ -127,6 +130,7 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
 
 List<Widget> displayBoxesAroundRecognizedObjects(Size screen) {
   var recognitionsList = globals.recognitions;
+  printMessage("Recognitions (2): ${globals.recognitions}");
   if (recognitionsList == null) return [];
 
   double factorX = screen.width;
@@ -134,6 +138,7 @@ List<Widget> displayBoxesAroundRecognizedObjects(Size screen) {
 
   Color colorPick = Colors.pink;
 
+  printTitle("(5) Updating boxes");
   printMessage("(updated boxes) | List: ${recognitionsList.toString()}");
   return recognitionsList.map<Widget>((result) {
     if (result['confidenceInClass'] * 100 < 60) {
