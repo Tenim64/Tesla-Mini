@@ -1,6 +1,7 @@
 // Packages
 import 'package:camera/camera.dart';
 import 'package:tesla_mini/globals.dart';
+import 'globals.dart' as globals;
 import 'package:tesla_mini/tensorflow.dart';
 import 'package:tesla_mini/udpserver.dart';
 import 'package:tesla_mini/debugger.dart';
@@ -47,21 +48,23 @@ void stopCamera(CameraController controller) {
   sendDataUDP('state', 'Stopping'); // Send signal to http server
 }
 
-bool isProcessing = false;
 void processImage(CameraImage image) async {
   // Don't process multiple images at once
-  if (isProcessing) {
+  if (globals.isProcessing) {
     return;
   } else {
-    isProcessing = true;
+    globals.isProcessing = true;
   }
 
   printMessage("1) New image: ${DateTime.now()}"); // Print in debug console
 
   // Tensorflow
-  await tfProcessFrame(image);
-
-  isProcessing = false;
+  try {
+    await tfProcessFrame(ImageUtils.convertYUV420ToImage(image));
+  } catch (e) {
+    printErrorMessage(e);
+    exit(0);
+  }
 }
 
 void sendFrame(photo) async {

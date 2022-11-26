@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 import 'package:tesla_mini/tensorflow.dart';
 import 'package:tesla_mini/ui.dart';
 import 'package:wakelock/wakelock.dart';
-import 'package:tflite/tflite.dart';
 import 'package:tesla_mini/debugger.dart';
 
 // List for cameras
@@ -95,8 +94,6 @@ class CameraScreenState extends State<CameraScreen> {
     // Dispose of the controller when the widget is disposed.
     _controller.stopImageStream();
     _controller.dispose();
-    // Close Tensorflow
-    Tflite.close();
   }
 
   @override

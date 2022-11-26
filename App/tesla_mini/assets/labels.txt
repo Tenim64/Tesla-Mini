@@ -1,91 +1,62 @@
-???
-person
-bicycle
-car
-motorcycle
-airplane
-bus
-train
-truck
-boat
-traffic light
-fire hydrant
-???
-stop sign
-parking meter
-bench
-bird
-cat
-dog
-horse
-sheep
-cow
-elephant
-bear
-zebra
-giraffe
-???
-backpack
-umbrella
-???
-???
-handbag
-tie
-suitcase
-frisbee
-skis
-snowboard
-sports ball
-kite
-baseball bat
-baseball glove
-skateboard
-surfboard
-tennis racket
-bottle
-???
-wine glass
-cup
-fork
-knife
-spoon
-bowl
-banana
-apple
-sandwich
-orange
-broccoli
-carrot
-hot dog
-pizza
-donut
-cake
-chair
-couch
-potted plant
-bed
-???
-dining table
-???
-???
-toilet
-???
-tv
-laptop
-mouse
-remote
-keyboard
-cell phone
-microwave
-oven
-toaster
-sink
-refrigerator
-???
-book
-clock
-vase
-scissors
-teddy bear
-hair drier
-toothbrush
+bord: ezelsrug
+bord: verhoging
+bord: slipgevaar
+bord: linkse bocht
+bord: rechtse bocht
+bord: linkse zigzag
+bord: rechtse zigzag
+bord: kinderen
+bord: fietser
+bord: overstekend rund
+bord: werkzaamheden
+bord: verkeerslicht
+bord: overweg
+bord: gevaar
+bord: midden versmallende weg
+bord: rechtse versmallende weg
+bord: linkse versmallende weg
+bord: voorrangsweg
+bord: voorrang van rechts
+bord: voorrang verlenen indien nodig
+bord: voorrang voor tegenligger
+bord: stop
+bord: verboden inrijden
+bord: verboden fietsers
+bord: max 3,5 ton
+bord: verboden vrachtwagens
+bord: max 2,10 meter breedt
+bord: max 3,70 meter hoog
+bord: verboden
+bord: verboden links afslaan
+bord: verboden rechts afslaan
+bord: verboden voorsteken
+bord: max 70km/u
+bord: enkel voetgangsers en fietser
+bord: verplicht rechtdoor
+bord: verplicht aangegeven richting
+bord: verplicht rechtdoor of rechts
+bord: rotonde
+bord: verplicht fietspad
+bord: verplicht voetgangers en fietsers
+bord: verboden parkeren
+bord: verboden stilstaan of parkeren
+bord: verboden parkeren dag 1-15
+bord: verboden parkeren dag 16-31
+bord: heeft voorrang
+bord: parking
+bord: invalide parking
+bord: auto parking
+bord: vrachtwagen parking
+bord: bus parking
+bord: parking op berm
+bord: begin woonerf
+bord: einde woonerf
+bord: eenrichtingsstraat
+bord: doodlopende straat
+bord: einde werkzaamheden
+bord: oversteekplaats voetgangers
+bord: oversteekplaats fietsers
+bord: parking rechterkant
+bord: vluchtheuvel
+bord: einde voorrang
+bord: voorrang
