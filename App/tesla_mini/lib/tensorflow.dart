@@ -10,7 +10,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 
-const detectionThreshold = 50;
+const detectionThreshold = 40;
 
 Future<void> tfLoadFirebase() async {
   await Firebase.initializeApp();
