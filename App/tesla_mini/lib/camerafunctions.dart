@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:tesla_mini/globals.dart';
-import 'package:tesla_mini/otherfunctions.dart';
+import 'globals.dart' as globals;
 import 'package:tesla_mini/tensorflow.dart';
 import 'package:tesla_mini/udpserver.dart';
 import 'package:tesla_mini/debugger.dart';
@@ -51,13 +51,12 @@ void stopCamera(CameraController controller) {
   sendDataUDP('state', 'Stopping'); // Send signal to http server
 }
 
-bool isProcessing = false;
 void processImage(CameraImage image) async {
   // Don't process multiple images at once
-  if (isProcessing) {
+  if (globals.isProcessing) {
     return;
   } else {
-    isProcessing = true;
+    globals.isProcessing = true;
   }
 
   printMessage("(1) New image: ${DateTime.now()}"); // Print in debug console
@@ -69,8 +68,6 @@ void processImage(CameraImage image) async {
     printErrorMessage(e);
     exit(0);
   }
-
-  isProcessing = false;
 }
 
 void sendFrame(photo) async {

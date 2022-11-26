@@ -2,17 +2,15 @@
 // ignore_for_file: avoid_function_literals_in_foreach_calls
 
 import 'dart:math';
-import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'globals.dart' as globals;
 import 'package:tesla_mini/debugger.dart';
 import 'package:image/image.dart' as imageLib;
 import 'package:firebase_core/firebase_core.dart';
-import 'package:firebase_ml_model_downloader/firebase_ml_model_downloader.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
 
-const modelType = "BelgiumTS";
+const detectionThreshold = 50;
 
 Future<void> tfLoadFirebase() async {
   await Firebase.initializeApp();
@@ -77,30 +75,17 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
     outputShapes.add(tensor.shape);
   });
   // TensorBuffers for output tensors
-  TensorBuffer outputLocations =
-      TensorBufferFloat(outputShapes[globals.locationsIndex]);
-  TensorBuffer outputClasses =
-      TensorBufferFloat(outputShapes[globals.classesIndex]);
-  TensorBuffer outputScores =
-      TensorBufferFloat(outputShapes[globals.scoresIndex]);
-  TensorBuffer numLocations = TensorBufferFloat(outputShapes[globals.numIndex]);
+  TensorBuffer outputLocations = TensorBufferFloat(outputShapes[1]);
+  TensorBuffer outputClasses = TensorBufferFloat(outputShapes[3]);
+  TensorBuffer outputScores = TensorBufferFloat(outputShapes[0]);
+  TensorBuffer outputCount = TensorBufferFloat(outputShapes[2]);
   // Outputs map
-  Map<int, Object> outputs;
-  if (modelType == "BelgiumTS") {
-    outputs = {
-      globals.locationsIndex: outputLocations.buffer,
-      globals.classesIndex: outputClasses.buffer,
-      globals.scoresIndex: outputScores.buffer,
-      globals.numIndex: numLocations.buffer,
-    };
-  } else {
-    outputs = {
-      0: outputLocations.buffer,
-      1: outputClasses.buffer,
-      2: outputScores.buffer,
-      3: numLocations.buffer,
-    };
-  }
+  Map<int, Object> outputs = {
+    0: outputScores.buffer,
+    1: outputLocations.buffer,
+    2: outputCount.buffer,
+    3: outputClasses.buffer,
+  };
   printMessage("(2.2) Output ready");
 
   // ---- Run model
@@ -108,20 +93,28 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
   printMessage("(2.3) Model ran");
 
   // ---- Set recognitions
-  printMessage("(2.4) Output: $outputs");
-  globals.recognitions = outputs;
-  printMessage("(2.5) Recognitions: ${globals.recognitions}");
-  globals.recognitionsNotifier.value = globals.recognitionsNotifier.value * -1;
-  printMessage("(2.6) Notifier: ${globals.recognitionsNotifier.value}");
+  Map<String, Object> recognitions = {
+    "locations": outputLocations.getDoubleList(),
+    "classes": outputClasses.getDoubleList(),
+    "scores": outputScores.getDoubleList(),
+    "count": outputCount.getIntValue(0),
+  };
+  /*
+  printMessage("Locations: ${outputLocations.getDoubleList()}");
+  printMessage("Classes: ${outputClasses.getDoubleList()}");
+  printMessage("Scores: ${outputScores.getDoubleList()}");
+  printMessage("Count: ${outputCount.getIntValue(0)}");
+  */
+  await globals.updateRecognitions(recognitions);
 
   // Print
   printTitle("(3) Tensorflow processed");
-  if (numLocations.getIntValue(0) > 0) {
-    printTitle("(4) Detected objects (= ${numLocations.getIntValue(0)}):");
-    for (var i = 0; i < numLocations.getIntValue(0); i++) {
-      //printMessage("Output $i: ${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
-      if (outputScores.getDoubleValue(i) * 100 > 60) {
-        //printMessage("Detected: ${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
+  if (outputCount.getIntValue(0) > 0) {
+    printTitle("(4) Detected objects:");
+    for (var i = 0; i < outputCount.getIntValue(0); i++) {
+      if (outputScores.getDoubleValue(i) * 100 > detectionThreshold) {
+        printMessage(
+            "${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
       }
     }
   }
@@ -129,34 +122,57 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
 }
 
 List<Widget> displayBoxesAroundRecognizedObjects(Size screen) {
-  var recognitionsList = globals.recognitions;
-  printMessage("Recognitions (2): ${globals.recognitions}");
-  if (recognitionsList == null) return [];
+  Map<String, Object> recognitions = globals.recognitions;
+  if (recognitions.isEmpty) return [];
+  printTitle("(5) Updating boxes");
+
+  List<double> rawLocations = recognitions["locations"] as List<double>;
+  List<double> classes = recognitions["classes"] as List<double>;
+  List<double> scores = recognitions["scores"] as List<double>;
+  int count = recognitions["count"] as int;
+  printMessage("(5.1) Raw input ready");
+
+  List<Map> locations = [];
+  for (var i = 0; i < count; i += 4) {
+    Map location = {};
+    location["x"] = rawLocations[i];
+    location["y"] = rawLocations[i + 1];
+    location["width"] = rawLocations[i + 2];
+    location["height"] = rawLocations[i + 3];
+    locations.add(location);
+    if (i == 0) {
+      printMessage(
+          "location at: (${location["x"]}, ${location["y"]}) width:${location["width"]}, height:${location["height"]}");
+    }
+  }
+  printMessage("(5.2) Locations ready");
 
   double factorX = screen.width;
   double factorY = screen.height;
+  printMessage("(5.3) Screen size ready ($factorX, $factorY)");
 
   Color colorPick = Colors.pink;
 
-  printTitle("(5) Updating boxes");
-  printMessage("(updated boxes) | List: ${recognitionsList.toString()}");
-  return recognitionsList.map<Widget>((result) {
-    if (result['confidenceInClass'] * 100 < 60) {
-      return const Positioned(
-          left: 0, top: 0, width: 0, height: 0, child: SizedBox.shrink());
+  List<Widget> boxes = [];
+  // Iterate over possible detections
+  for (var i = 0; i < count; i++) {
+    Widget box;
+    // Check if score is higher than 60, otherwise skip
+    if (scores[i] * 100 < detectionThreshold) {
+      continue;
     }
-    return Positioned(
-      left: result["rect"]["x"] * factorX,
-      top: result["rect"]["y"] * factorY,
-      width: result["rect"]["w"] * factorX,
-      height: result["rect"]["h"] * factorY,
+    box = Positioned(
+      left: locations[i]["x"] * factorX,
+      top: locations[i]["y"] * factorY,
+      width: locations[i]["width"] * factorX,
+      height: locations[i]["height"] * factorY,
       child: Container(
         decoration: BoxDecoration(
           borderRadius: const BorderRadius.all(Radius.circular(10.0)),
           border: Border.all(color: Colors.pink, width: 2.0),
         ),
         child: Text(
-          "${result['detectedClass']} ${(result['confidenceInClass'] * 100).toStringAsFixed(0)}%",
+          "${globals.labels.elementAt(classes[i].toInt())} ${(scores[i] * 100).toStringAsFixed(0)}%",
           style: TextStyle(
             background: Paint()..color = colorPick,
             color: Colors.black,
@@ -165,5 +181,8 @@ List<Widget> displayBoxesAroundRecognizedObjects(Size screen) {
         ),
       ),
     );
-  }).toList();
+    boxes.add(box);
+  }
+  printMessage("(5.3) Boxes ready");
+  return boxes;
 }

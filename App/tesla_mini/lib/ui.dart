@@ -4,6 +4,7 @@ import 'package:camera/camera.dart';
 import 'package:tesla_mini/globals.dart';
 import 'package:tesla_mini/menubuttons.dart';
 import 'package:tesla_mini/tensorflow.dart';
+import 'package:tesla_mini/globals.dart' as globals;
 
 // UI
 class Interface extends StatefulWidget {
@@ -34,7 +35,7 @@ class InterfaceState extends State<Interface> {
                   toggleCameraButton(widget.pController);
                   setState(() {});
                 },
-                child: widget.pController.value.isStreamingImages
+                child: recognitionsNotifier.value.isOdd
                     ? const Text('Stop')
                     : const Text('Start')),
             TextButton(
@@ -75,9 +76,11 @@ class InterfaceState extends State<Interface> {
                     final keyContext = cameraPreviewWrapper.currentContext;
                     final box = keyContext!.findRenderObject() as RenderBox;
                     if (value != 0) {
+                      final boxes = displayBoxesAroundRecognizedObjects(
+                          box.hasSize ? box.size : size);
+                      isProcessing = false;
                       return Stack(
-                        children: displayBoxesAroundRecognizedObjects(
-                            box.hasSize ? box.size : size),
+                        children: boxes,
                       );
                     } else {
                       return Stack();

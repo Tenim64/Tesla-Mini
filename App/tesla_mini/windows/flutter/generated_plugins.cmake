@@ -3,7 +3,8 @@
 #
 
 list(APPEND FLUTTER_PLUGIN_LIST
-  network_info_plus_windows
+  network_info_plus
+  tflite_flutter_helper
 )
 
 list(APPEND FLUTTER_FFI_PLUGIN_LIST

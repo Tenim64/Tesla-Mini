@@ -1,18 +1,21 @@
-// ignore_for_file: prefer_typing_uninitialized_variables
+// ignore_for_file: prefer_typing_uninitialized_variables, invalid_use_of_protected_member
 
 library tesla_mini.globals;
 
 import 'package:flutter/material.dart';
 
-var recognitions;
+Map<String, Object> recognitions = {};
 // 0 = disabled
-// 1 / -1 = enabled
+// 1 = enabled
 final recognitionsNotifier = ValueNotifier<int>(0);
-
-const scoresIndex = 0;
-const locationsIndex = 1;
-const numIndex = 2;
-const classesIndex = 3;
 
 var interpreter;
 List<String> labels = [];
+
+bool isProcessing = false;
+
+Future<void> updateRecognitions(var inputRecognitions) async {
+  recognitions = inputRecognitions;
+  recognitionsNotifier.notifyListeners();
+  return;
+}
