@@ -9,8 +9,34 @@ var udpIpAddress = '192.168.1.53';
 const udpPort = 8080;
 const isUDPServerActive = false;
 
+Future<void> scanNetwork() async {
+  await (NetworkInfo().getWifiIP()).then(
+    (ip) async {
+      final String subnet = ip!.substring(0, ip.lastIndexOf('.'));
+      const port = 80;
+      for (var i = 0; i < 256; i++) {
+        String ip = '$subnet.$i';
+        await Socket.connect(ip, port,
+                timeout: const Duration(milliseconds: 50))
+            .then((socket) async {
+          await InternetAddress(socket.address.address).reverse().then((value) {
+            printMessage(value.host);
+            printMessage(socket.address.address);
+          }).catchError((error) {
+            printErrorMessage(socket.address.address);
+            printErrorMessage('Error: $error');
+          });
+          socket.destroy();
+        }).catchError((error) => null);
+      }
+    },
+  );
+  printMessage('Done');
+}
+
 // Send a test request to udp server
-void testHTTP() {
+void testUDP() {
+  scanNetwork();
   sendDataUDP('state', 'Testing');
 }
 

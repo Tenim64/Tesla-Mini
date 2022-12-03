@@ -5,6 +5,7 @@ import 'package:tesla_mini/globals.dart';
 import 'package:tesla_mini/menubuttons.dart';
 import 'package:tesla_mini/tensorflow.dart';
 import 'package:tesla_mini/globals.dart' as globals;
+import 'package:tesla_mini/udpserver.dart';
 
 // UI
 class Interface extends StatefulWidget {
@@ -45,6 +46,11 @@ class InterfaceState extends State<Interface> {
                 child: const Text(
                   'Focus',
                 )),
+            TextButton(
+                onPressed: () {
+                  testUDP();
+                },
+                child: const Text('Test UDP')),
             TextButton(
                 onPressed: () {
                   restartButton();
