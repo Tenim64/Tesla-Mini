@@ -48,7 +48,7 @@ class InterfaceState extends State<Interface> {
                 )),
             TextButton(
                 onPressed: () {
-                  testUDP();
+                  testTCP();
                 },
                 child: const Text('Test UDP')),
             TextButton(

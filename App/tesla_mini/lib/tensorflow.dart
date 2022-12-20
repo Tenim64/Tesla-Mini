@@ -35,7 +35,7 @@ void tfLoadModel(modelName) async {
   try {
     globals.interpreter = await tfl.Interpreter.fromAsset('model.tflite');
     globals.labels = await FileUtil.loadLabels("assets/labels.txt");
-    printMessage(globals.labels);
+    //printMessage(globals.labels);
     printMessage('Tensorflow model loaded');
   } catch (e) {
     printMessage('Error loading model: ${e..toString()}');

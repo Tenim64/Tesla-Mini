@@ -33,7 +33,7 @@ void startCamera(CameraController controller) {
     printMessage('Already running');
   }
 
-  sendDataUDP('state', 'Starting'); // Send signal to http server
+  sendDataTCP('state', 'Starting'); // Send signal to http server
 }
 
 // Stop image stream
@@ -48,7 +48,7 @@ void stopCamera(CameraController controller) {
     printMessage('Wasn\'t running');
   }
 
-  sendDataUDP('state', 'Stopping'); // Send signal to http server
+  sendDataTCP('state', 'Stopping'); // Send signal to http server
 }
 
 void processImage(CameraImage image) async {
@@ -81,5 +81,5 @@ void sendFrame(photo) async {
   // Convert image to jpeg
   Uint8List jpeg = Uint8List.fromList(img.encodeJpg(image));
 
-  sendDataUDP("image", jpeg.toString()); // Send jpeg data to http server
+  sendDataTCP("image", jpeg.toString()); // Send jpeg data to http server
 }
