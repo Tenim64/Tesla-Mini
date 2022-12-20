@@ -3,6 +3,7 @@
 
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:tesla_mini/udpserver.dart';
 import 'globals.dart' as globals;
 import 'package:tesla_mini/debugger.dart';
 import 'package:image/image.dart' as imageLib;
@@ -106,6 +107,16 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
   printMessage("Count: ${outputCount.getIntValue(0)}");
   */
   await globals.updateRecognitions(recognitions);
+
+  // ---- Send data
+  if (outputCount.getIntValue(0) > 0) {
+    for (var i = 0; i < outputCount.getIntValue(0); i++) {
+      if (outputScores.getDoubleValue(i) * 100 > detectionThreshold) {
+        sendDataTCP("recognition",
+            globals.labels.elementAt(outputClasses.getIntValue(i)));
+      }
+    }
+  }
 
   // Print
   printTitle("(3) Tensorflow processed");
