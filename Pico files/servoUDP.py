@@ -20,6 +20,8 @@ def processData(data):
         if (data_title == "state"):
             if (data_data == "Testing"):
                 testProcess()
+            if (data_data == "Starting" or data_data == "Stopping"):
+                setPosition(currentPosition)
 
 def testProcess():
     setPosition(0)
@@ -53,6 +55,8 @@ import machine
 # ---------- Variables ----------
 servoPin = 1
 
+offset = 10
+
 angleRange = 225
 digitalRange = 180
 
@@ -60,17 +64,22 @@ currentPosition = 90
 
 
 # ---------- Functions ----------
+def so(x):
+    global offset
+    offset = x
+def sp(x):
+    setPosition(x)
 
 # --- Machine functions ---
 
 # Convert degrees to analog data
 def degreesToAnalog(degrees):
-    analog = round((degrees * 8000 / 225 + 1000) / 50) * 50
+    analog = round((((digitalRange - offset / 2) - degrees) * 8000 / 225 + 1000) / 50) * 50
     return analog
 
 # Convert analog data to degrees
 def analogToDegrees(analog):
-    degrees = round((analog - 1000) * 225 / 8000)
+    degrees = round((digitalRange - offset / 2) - (analog - 1000) * 225 / 8000)
     return degrees
 
 # Turn function using analog data as input
@@ -79,7 +88,7 @@ def turnAnalog(position):
     servo = machine.PWM(machine.Pin(servoPin))
     servo.freq(50)
     global currentPosition
-    currentPosition = degreesToAnalog(min(max(analogToDegrees(position), 0), digitalRange - 1))
+    currentPosition = degreesToAnalog(min(max(analogToDegrees(position), offset), digitalRange - offset))
     servo.duty_u16(currentPosition)
     print("Turned to ", analogToDegrees(currentPosition), " degrees.")
 
@@ -87,7 +96,7 @@ def turnAnalog(position):
 
 # Set position
 def setPosition(degrees):
-    position = degreesToAnalog(180 - degrees)
+    position = degreesToAnalog(degrees)
     turnAnalog(position)
 
 # Full left turn
