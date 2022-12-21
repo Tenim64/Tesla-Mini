@@ -2,11 +2,15 @@
 # ---------- Packages ----------
 import json
 from time import sleep
+from machine import Pin
 
 
 # ---------- Variables ----------
 wlan = None
 s = None
+
+powerBtnPin = 2
+powerBtn = Pin(powerBtnPin, Pin.IN, Pin.PULL_UP)
 
 
 # ---------- Functions ----------
@@ -32,6 +36,19 @@ def testProcess():
 
 
 # ---------- Program ----------
+def boot():
+    print('Software ready!')
+    while True:
+        blink(1)
+        sleep(1)
+        while powerBtn.value() == 0:
+            pass
+        print("Powered on!")
+        main()
+        while powerBtn.value() == 1:
+            pass
+        print("Powered off!")
+
 def main():
     try:
         # Set the default turn position
@@ -90,7 +107,7 @@ def turnAnalog(position):
     global currentPosition
     currentPosition = degreesToAnalog(min(max(analogToDegrees(position), offset), digitalRange - offset))
     servo.duty_u16(currentPosition)
-    print("Turned to ", analogToDegrees(currentPosition), " degrees.")
+    # print("Turned to ", analogToDegrees(currentPosition), " degrees.")
 
 # --- User functions ---
 
@@ -133,8 +150,6 @@ from time import sleep
 from machine import Pin
 
 # ---------- Led ----------
-print('Preparing software...')
-
 led = Pin("LED", Pin.OUT)
 led.off()
 def blink(blinks):
@@ -184,6 +199,7 @@ def listenToSocket(s):
     print("Listening to socket")
 
     # Accept an incoming connection
+    s.setblocking(False)
     conn, addr = s.accept()
     blink(1)
     print("Connection made")
@@ -201,4 +217,4 @@ def listenToSocket(s):
 
 
 # -------------------------- Run program --------------------------
-main()
+boot()
