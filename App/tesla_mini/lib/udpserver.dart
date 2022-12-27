@@ -24,16 +24,30 @@ void sendDataTCP(String title, String data) {
 }
 
 Future<void> sendRequestTCP(String data) async {
-  // Print in debug console
-  printMessage("Send data: $data");
-
-  // Send data
-  if (globals.socketTCP == null) {
-    await globals.connectSocket();
-  }
   try {
+    // Connect to socket
+    if (globals.socketTCP == null) {
+      await globals.connectSocket();
+    }
+    // Send data
     globals.socketTCP?.write(data);
+    if (jsonDecode(data)['data'] == 'Testing') {
+      // Print in debug console
+      printMessage("Data sent: $data");
+      globals.setDialog(
+          "Data sent!",
+          "A connection was made/found and data has been sent",
+          "Ok",
+          globals.closeDialog,
+          "",
+          globals.closeDialog,
+          1);
+      globals.updateDialog();
+    }
   } catch (e) {
     printErrorMessage("Error occurred: $e");
+    globals.setDialog("Error!", e.toString(), "Close", globals.closeDialog, "",
+        globals.closeDialog, 1);
+    globals.updateDialog();
   }
 }

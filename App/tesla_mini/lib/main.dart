@@ -1,6 +1,7 @@
 // Packages
 import 'dart:async';
 import 'package:camera/camera.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:tesla_mini/tensorflow.dart';
 import 'package:tesla_mini/ui.dart';
@@ -34,12 +35,14 @@ Future<void> main() async {
     MaterialApp(
       theme: ThemeData.dark().copyWith(
           textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-            foregroundColor: const Color.fromARGB(255, 255, 255, 255),
-            textStyle: const TextStyle(
-              fontSize: 20,
-            )),
-      )),
+            style: TextButton.styleFrom(
+                foregroundColor: const Color.fromARGB(255, 255, 255, 255),
+                textStyle: const TextStyle(
+                  fontSize: 20,
+                )),
+          ),
+          cupertinoOverrideTheme:
+              const CupertinoThemeData(brightness: Brightness.dark)),
       home: CameraScreen(
         camera: firstCamera,
       ),
