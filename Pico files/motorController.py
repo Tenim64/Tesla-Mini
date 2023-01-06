@@ -1,8 +1,8 @@
 from machine import Pin,PWM
 from time import sleep
  
-A_1A_pin = 26                 # Motor drive module
-A_1B_pin = 27                 # Motor drive module
+A_1A_pin = 27                 # Motor drive module
+A_1B_pin = 26                 # Motor drive module
  
 def setup():
     global A_1A
@@ -17,18 +17,18 @@ def main():
     setup()
     direction = 1
     while True:
-        for Percentage in range(0,100, 1):
+        for Percentage in range(0,100, 10):
+            drive(Percentage, direction)
+            sleep(0.5)
+        for Percentage in range(100,0, -10):
             drive(Percentage, direction)
             sleep(0.1)
-        for Percentage in range(100,0, -1):
-            drive(Percentage, direction)
-            sleep(0.1)
-        direction = -1
+        direction *= -1
 
 def drive(speedPercentage, direction):
     speedValue = round(speedPercentage * 65535 / 100)
     print(speedValue, ' in ', direction)
-    if direction > 1:
+    if direction > 0:
         A_1B.duty_u16(0)                      # control fan speed
         A_1A.duty_u16(speedValue)             # control fan speed
     if direction < 0:
