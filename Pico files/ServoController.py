@@ -9,7 +9,7 @@ servoPin = 1
 # Servo turn values
 analogRange = 225       # [ 0 ; 360 ]
 digitalRange = 180      # [ 0 ; analogRange ]
-analogOffset = 14       # [ 0 ; digitalOffset ]
+analogOffset = 4       # [ 0 ; digitalOffset ]
 digitalOffset = 45      # [ 0 ; analogRange - digitalRange ]
 marginAngle = 50        # [ 0 ; actualRange / 2]
 

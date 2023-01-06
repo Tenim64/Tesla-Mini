@@ -2,14 +2,25 @@
 # ---------- Packages ----------
 import json
 from time import sleep
+from machine import Pin
+import network
+import socket
+import sys
 
 
 # ---------- Variables ----------
-wlan = None
+wlan = network.WLAN(network.AP_IF)
 s = None
+sConn = None
+
+powerBtnPin = 2
+powerBtn = Pin(powerBtnPin, Pin.IN, Pin.PULL_UP)
 
 
 # ---------- Functions ----------
+def runProgram():
+    return (powerBtn.value() == 1)
+
 def processData(data):
     blink(1)
     print("Data received: " + data)
@@ -18,30 +29,58 @@ def processData(data):
     data_data = data_object["data"]
     if data_title and data_data:
         if (data_title == "state"):
+            print(data_data)
             if (data_data == "Testing"):
                 testProcess()
             if (data_data == "Starting" or data_data == "Stopping"):
-                setPosition(currentPosition)
+                setPosition(currentPosition_Percentage)
 
 def testProcess():
+    setPosition(-100)
+    sleep(2)
     setPosition(0)
     sleep(2)
-    setPosition(180)
+    setPosition(100)
     sleep(2)
-    setPosition(90)
+    setPosition(0)
 
 
 # ---------- Program ----------
+def boot():
+    print('Software ready!')
+    while True:
+        blink(1)
+        sleep(1)
+        while not runProgram:
+            pass
+        print("Powered on!")
+        main()
+        while runProgram:
+            pass
+        print("Powered off!")
+
 def main():
     try:
         # Set the default turn position
-        setPosition(currentPosition)
+        setPosition(currentPosition_Percentage)
+        while runProgram:
+            sleep(5)
+            testProcess()
+        sys.exit()
+        # Stop possible previous network
+        stopNetwork()
         # Setup the network
         setupNetwork()
         # Make a socket
         makeSocket(wlan)
-        # Listen to the socket
-        listenToSocket(s)
+        while runProgram:
+            try:
+                # Listen to the socket
+                receiveSocketData(s)
+            except Exception as e:
+                print(e)
+                # Remake a socket
+                makeSocket(wlan)
     except Exception as e:
         print(e)
 
@@ -53,75 +92,96 @@ import machine
 
 
 # ---------- Variables ----------
+# Servo pin number
 servoPin = 1
 
-offset = 10
+# Servo turn values
+analogRange = 225       # [ 0 ; 360 ]
+digitalRange = 180      # [ 0 ; analogRange ]
+analogOffset = 6       # [ 0 ; digitalOffset ]
+digitalOffset = 45      # [ 0 ; analogRange - digitalRange ]
+marginAngle = 50        # [ 0 ; actualRange / 2]
 
-angleRange = 225
-digitalRange = 180
+# Calculated servo turn values
+actualStart_Degrees = digitalOffset + 2 * analogOffset + marginAngle
+actualEnd_Degrees = digitalRange + digitalOffset - marginAngle
+actualRange_Degrees = actualEnd_Degrees - actualStart_Degrees
 
-currentPosition = 90
-
+# Position values
+currentPosition_Percentage = 0      # [ -100 ; 100 ]
 
 # ---------- Functions ----------
-def so(x):
-    global offset
-    offset = x
-def sp(x):
-    setPosition(x)
-
+def t():
+    testProcess()
 # --- Machine functions ---
 
 # Convert degrees to analog data
-def degreesToAnalog(degrees):
-    analog = round((((digitalRange - offset / 2) - degrees) * 8000 / 225 + 1000) / 50) * 50
-    return analog
+def degreesToAnalog(position_Degrees):
+    position_Analog = round((position_Degrees * 8000 / 225 + 1000) / 50) * 50
+    return position_Analog
 
 # Convert analog data to degrees
-def analogToDegrees(analog):
-    degrees = round((digitalRange - offset / 2) - (analog - 1000) * 225 / 8000)
-    return degrees
+def analogToDegrees(position_Analog):
+    position_Degrees = round((position_Analog - 1000) / 8000 * 225)
+    return position_Degrees
+
+# Convert percentage to degrees
+def percentageToDegrees(position_Percentage):
+    positionProcessed_Degrees = analogRange - ((position_Percentage / 100 + 1) / 2 * actualRange_Degrees + actualStart_Degrees)
+    return positionProcessed_Degrees
+
+# Turn function using percentage as input
+def turnPercentage(position_Percentage):
+    # Position(%) ∈ [ -100 ; 100 ]
+    positionProcessed_Percentage = min(max(position_Percentage, -100), 100)
+
+    # Save new position
+    global currentPosition_Percentage
+    currentPosition_Percentage = positionProcessed_Percentage
+
+    # Convert position from percentage to degrees
+    positionProcessed_Degrees = percentageToDegrees(positionProcessed_Percentage)
+
+    # Convert position from degrees to analog data
+    positionProcessed_Analog = degreesToAnalog(positionProcessed_Degrees)
+    # Turn
+    turnAnalog(positionProcessed_Analog)
+
+
+    print(positionProcessed_Percentage, "% | ", positionProcessed_Degrees, "° | ", positionProcessed_Analog)
 
 # Turn function using analog data as input
-def turnAnalog(position):
+def turnAnalog(position_Analog):
     global servoPin
     servo = machine.PWM(machine.Pin(servoPin))
     servo.freq(50)
-    global currentPosition
-    currentPosition = degreesToAnalog(min(max(analogToDegrees(position), offset), digitalRange - offset))
-    servo.duty_u16(currentPosition)
-    print("Turned to ", analogToDegrees(currentPosition), " degrees.")
+    servo.duty_u16(position_Analog)
 
 # --- User functions ---
 
 # Set position
-def setPosition(degrees):
-    position = degreesToAnalog(degrees)
-    turnAnalog(position)
+def setPosition(position_Percentage):
+    turnPercentage(position_Percentage)
 
 # Full left turn
 def full_left():
-    setPosition(angleRange - 1)
+    turnPercentage(-100)
     
 # Full right turn
 def full_right():
-    setPosition(0)
+    turnPercentage(100)
 
 # Turn left n degrees
-def turn_left(degrees):
-    servo = machine.PWM(machine.Pin(servoPin))
-    servo.freq(50)
-    global currentPosition
-    currentPosition = degreesToAnalog(analogToDegrees(currentPosition) + degrees)
-    turnAnalog(currentPosition)
+def turn_left(positionChange_Percentage):
+    global currentPosition_Percentage
+    currentPosition_Percentage -= positionChange_Percentage
+    turnPercentage(currentPosition_Percentage)
 
 # Turn right n degrees
-def turn_right(degrees):
-    servo = machine.PWM(machine.Pin(servoPin))
-    servo.freq(50)
-    global currentPosition
-    currentPosition = degreesToAnalog(analogToDegrees(currentPosition) - degrees)
-    turnAnalog(currentPosition)
+def turn_right(positionChange_Percentage):
+    global currentPosition_Percentage
+    currentPosition_Percentage += positionChange_Percentage
+    turnPercentage(currentPosition_Percentage)
 
 
 
@@ -131,10 +191,9 @@ import network
 import socket
 from time import sleep
 from machine import Pin
+import select
 
 # ---------- Led ----------
-print('Preparing software...')
-
 led = Pin("LED", Pin.OUT)
 led.off()
 def blink(blinks):
@@ -169,29 +228,59 @@ def setupNetwork():
     print("Connect to \"" + ssid + "\" using the password \"" + password + "\"")
     blink(2)
 
+# ---- Stop network ----
+def stopNetwork():
+    global wlan
+    wlan.active(False)
+    print('Stopped network')
+
 # ---------- Connecting ----------
 def makeSocket(wlan):
     global s
+    # Remove possible previous socket
+    try:
+        s.close() # type:ignore
+    except Exception as e:
+        pass
     # Create a socket
     s = socket.socket()
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     # Bind the socket to a local address and port
     s.bind((wlan.ifconfig()[0], 80))
+    s.setblocking(0)
     print("Socket bound")
+    listenToSocket(s)
 
 def listenToSocket(s):
+    global sConn
     # Listen for incoming connections
-    s.listen(1)
+    s.listen()
     print("Listening to socket")
 
     # Accept an incoming connection
-    conn, addr = s.accept()
+    while runProgram:
+        try:
+            sConn, sAddr = s.accept()
+            break
+        except Exception as e:
+            pass
+    if not runProgram:
+        return
     blink(1)
     print("Connection made")
 
-    # Continuously receive data and print it
+def receiveSocketData(s):
+    global sConn
+    # Continuously receive data and process it
     data = None
-    while True:
-        data = conn.recv(1024).decode()
+    while runProgram:
+        # Check if connection is still active
+        connected = select.select([s], [], [], 0)
+        if not connected:
+            print("Connection lost")
+            raise Exception("Connection lost")
+        # If there is data, process it
+        data = sConn.recv(1024).decode() # type:ignore
         if not data:
             continue
         if data != None:
@@ -201,4 +290,4 @@ def listenToSocket(s):
 
 
 # -------------------------- Run program --------------------------
-main()
+boot()
