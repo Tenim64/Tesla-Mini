@@ -1,56 +1,69 @@
+# ---------- Packages ----------
 from machine import Pin,PWM
 from time import sleep
  
-A_1A_pin = 27                 # Motor drive module
-A_1B_pin = 26                 # Motor drive module
+
+# ---------- Variables ----------
+# Servo pin number
+motorPin_A_1A = 27
+motorPin_A_1B = 26
+
+# Setup pins as PWM
+A_1A = PWM(Pin(motorPin_A_1A))
+A_1A.freq(1000)
+A_1B = PWM(Pin(motorPin_A_1B))
+A_1B.freq(1000)
  
-def setup():
-    global A_1A
-    global A_1B
+
+# ---------- Functions ----------
+# --- Machine functions ---
+
+# Set motor speed in specific direction
+def motor_SetSpeed(inputSpeedPercentage, direction):
+    print(inputSpeedPercentage, ' in ', direction)
+
+    # Brake if the speed or direction is 0
+    if inputSpeedPercentage is 0 or direction is 0:
+        A_1A.duty_u16(0)
+        A_1B.duty_u16(0)
+        return
+
+    # Calculations for the output
+    actualMinPercentage = 20
+    actualMaxPercentage = 50
+    actualSpeedPercentage = inputSpeedPercentage / 100 * (actualMaxPercentage - actualMinPercentage) + actualMinPercentage
+    speedValue = round(actualSpeedPercentage * 65535 / 100)
+    print(actualSpeedPercentage, ' in ', direction)
+
+    # Output based on the direction
+    if direction > 0:               # If the direction is positive -> move forwards
+        A_1A.duty_u16(speedValue)
+        A_1B.duty_u16(0)
+    elif direction < 0:             # If the direction is negative -> move backwards
+        A_1A.duty_u16(0)
+        A_1B.duty_u16(speedValue)
+
+
+
+# --- User functions ---
+
+# Drive / set motor speed
+def motor_Drive(speedPercentage, direction):
+    motor_SetSpeed(speedPercentage, direction)
+
+# Drive / set motor speed
+def motor_Forwards(speedPercentage):
+    motor_SetSpeed(speedPercentage, 1)
+
+# Drive / set motor speed
+def motor_Backwards(speedPercentage):
+    motor_SetSpeed(speedPercentage, -1)
     
-    A_1A = PWM(Pin(A_1A_pin))
-    A_1B = PWM(Pin(A_1B_pin))
-    A_1A.freq(1000)             # Set the driver operating frequency to 1K
-    A_1B.freq(1000)             # Set the driver operating frequency to 1K
- 
-def main():
-    setup()
-    direction = 1
-    while True:
-        for Percentage in range(0,100, 10):
-            drive(Percentage, direction)
-            sleep(0.5)
-        for Percentage in range(100,0, -10):
-            drive(Percentage, direction)
-            sleep(0.1)
-        direction *= -1
+# Drive / set motor speed
+def motor_Brake():
+    motor_SetSpeed(0, 0)
 
-def drive(speedPercentage, direction):
-    speedValue = round(speedPercentage * 65535 / 100)
-    print(speedValue, ' in ', direction)
-    if direction > 0:
-        A_1B.duty_u16(0)                      # control fan speed
-        A_1A.duty_u16(speedValue)             # control fan speed
-    if direction < 0:
-        A_1A.duty_u16(0)                      # control fan speed
-        A_1B.duty_u16(speedValue)             # control fan speed
 
-def a(x):
-    A_1A.duty_u16(x)
 
-def b(x):
-    A_1B.duty_u16(x)
-
-def fo():
-    a(65535)
-    b(0)
-
-def ba():
-    a(0)
-    b(65535)
-
-def st():
-    a(0)
-    b(0)
-
-main()
+# Default stopped
+motor_Brake()
