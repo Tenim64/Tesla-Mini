@@ -5,7 +5,6 @@ from time import sleep
 from machine import Pin
 import network
 import socket
-import sys
 
 
 # ---------- Variables ----------
@@ -33,16 +32,16 @@ def processData(data):
             if (data_data == "Testing"):
                 testProcess()
             if (data_data == "Starting" or data_data == "Stopping"):
-                setPosition(currentPosition_Percentage)
+                servo_SetPosition(servo_currentPosition_Percentage)
 
 def testProcess():
-    setPosition(-100)
+    servo_SetPosition(-100)
     sleep(2)
-    setPosition(0)
+    servo_SetPosition(0)
     sleep(2)
-    setPosition(100)
+    servo_SetPosition(100)
     sleep(2)
-    setPosition(0)
+    servo_SetPosition(0)
 
 
 # ---------- Program ----------
@@ -62,7 +61,7 @@ def boot():
 def main():
     try:
         # Set the default turn position
-        setPosition(currentPosition_Percentage)
+        servo_SetPosition(servo_currentPosition_Percentage)
         # Stop possible previous network
         stopNetwork()
         # Setup the network
@@ -82,7 +81,6 @@ def main():
 
 
 
-# -------------------------- Servo controller -------------------------- 
 # ---------- Packages ----------
 import machine
 
@@ -92,62 +90,59 @@ import machine
 servoPin = 1
 
 # Servo turn values
-analogRange = 225       # [ 0 ; 360 ]
-digitalRange = 180      # [ 0 ; analogRange ]
-analogOffset = 6       # [ 0 ; digitalOffset ]
-digitalOffset = 45      # [ 0 ; analogRange - digitalRange ]
-marginAngle = 50        # [ 0 ; actualRange / 2]
+servo_analogRange = 225       # [ 0 ; 360 ]
+servo_digitalRange = 180      # [ 0 ; servo_analogRange ]
+servo_analogOffset = 4       # [ 0 ; servo_digitalOffset ]
+servo_digitalOffset = 45      # [ 0 ; servo_analogRange - servo_digitalRange ]
+servo_marginAngle = 50        # [ 0 ; actualRange / 2]
 
 # Calculated servo turn values
-actualStart_Degrees = digitalOffset + 2 * analogOffset + marginAngle
-actualEnd_Degrees = digitalRange + digitalOffset - marginAngle
-actualRange_Degrees = actualEnd_Degrees - actualStart_Degrees
+servo_actualStart_Degrees = servo_digitalOffset + 2 * servo_analogOffset + servo_marginAngle
+servo_actualEnd_Degrees = servo_digitalRange + servo_digitalOffset - servo_marginAngle
+servo_actualRange_Degrees = servo_actualEnd_Degrees - servo_actualStart_Degrees
 
 # Position values
-currentPosition_Percentage = 0      # [ -100 ; 100 ]
+servo_currentPosition_Percentage = 0      # [ -100 ; 100 ]
 
 # ---------- Functions ----------
-def t():
-    testProcess()
 # --- Machine functions ---
 
 # Convert degrees to analog data
-def degreesToAnalog(position_Degrees):
+def servo_DegreesToAnalog(position_Degrees):
     position_Analog = round((position_Degrees * 8000 / 225 + 1000) / 50) * 50
     return position_Analog
 
 # Convert analog data to degrees
-def analogToDegrees(position_Analog):
+def servo_AnalogToDegrees(position_Analog):
     position_Degrees = round((position_Analog - 1000) / 8000 * 225)
     return position_Degrees
 
 # Convert percentage to degrees
-def percentageToDegrees(position_Percentage):
-    positionProcessed_Degrees = analogRange - ((position_Percentage / 100 + 1) / 2 * actualRange_Degrees + actualStart_Degrees)
+def servo_PercentageToDegrees(position_Percentage):
+    positionProcessed_Degrees = servo_analogRange - ((position_Percentage / 100 + 1) / 2 * servo_actualRange_Degrees + servo_actualStart_Degrees)
     return positionProcessed_Degrees
 
 # Turn function using percentage as input
-def turnPercentage(position_Percentage):
+def servo_TurnPercentage(position_Percentage):
     # Position(%) ∈ [ -100 ; 100 ]
     positionProcessed_Percentage = min(max(position_Percentage, -100), 100)
 
     # Save new position
-    global currentPosition_Percentage
-    currentPosition_Percentage = positionProcessed_Percentage
+    global servo_currentPosition_Percentage
+    servo_currentPosition_Percentage = positionProcessed_Percentage
 
     # Convert position from percentage to degrees
-    positionProcessed_Degrees = percentageToDegrees(positionProcessed_Percentage)
+    positionProcessed_Degrees = servo_PercentageToDegrees(positionProcessed_Percentage)
 
     # Convert position from degrees to analog data
-    positionProcessed_Analog = degreesToAnalog(positionProcessed_Degrees)
+    positionProcessed_Analog = servo_DegreesToAnalog(positionProcessed_Degrees)
     # Turn
-    turnAnalog(positionProcessed_Analog)
-
+    servo_TurnAnalog(positionProcessed_Analog)
 
     print(positionProcessed_Percentage, "% | ", positionProcessed_Degrees, "° | ", positionProcessed_Analog)
 
 # Turn function using analog data as input
-def turnAnalog(position_Analog):
+def servo_TurnAnalog(position_Analog):
     global servoPin
     servo = machine.PWM(machine.Pin(servoPin))
     servo.freq(50)
@@ -156,28 +151,28 @@ def turnAnalog(position_Analog):
 # --- User functions ---
 
 # Set position
-def setPosition(position_Percentage):
-    turnPercentage(position_Percentage)
+def servo_SetPosition(position_Percentage):
+    servo_TurnPercentage(position_Percentage)
 
 # Full left turn
-def full_left():
-    turnPercentage(-100)
+def servo_FullLeft():
+    servo_TurnPercentage(-100)
     
 # Full right turn
-def full_right():
-    turnPercentage(100)
+def servo_FullRight():
+    servo_TurnPercentage(100)
 
 # Turn left n degrees
-def turn_left(positionChange_Percentage):
-    global currentPosition_Percentage
-    currentPosition_Percentage -= positionChange_Percentage
-    turnPercentage(currentPosition_Percentage)
+def servo_TurnLeft(positionChange_Percentage):
+    global servo_currentPosition_Percentage
+    servo_currentPosition_Percentage -= positionChange_Percentage
+    servo_TurnPercentage(servo_currentPosition_Percentage)
 
 # Turn right n degrees
-def turn_right(positionChange_Percentage):
-    global currentPosition_Percentage
-    currentPosition_Percentage += positionChange_Percentage
-    turnPercentage(currentPosition_Percentage)
+def servo_TurnRight(positionChange_Percentage):
+    global servo_currentPosition_Percentage
+    servo_currentPosition_Percentage += positionChange_Percentage
+    servo_TurnPercentage(servo_currentPosition_Percentage)
 
 
 

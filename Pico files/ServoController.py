@@ -7,19 +7,19 @@ import machine
 servoPin = 1
 
 # Servo turn values
-analogRange = 225       # [ 0 ; 360 ]
-digitalRange = 180      # [ 0 ; analogRange ]
-analogOffset = 4       # [ 0 ; digitalOffset ]
-digitalOffset = 45      # [ 0 ; analogRange - digitalRange ]
-marginAngle = 50        # [ 0 ; actualRange / 2]
+servo_analogRange = 225       # [ 0 ; 360 ]
+servo_digitalRange = 180      # [ 0 ; servo_analogRange ]
+servo_analogOffset = 4       # [ 0 ; servo_digitalOffset ]
+servo_digitalOffset = 45      # [ 0 ; servo_analogRange - servo_digitalRange ]
+servo_marginAngle = 50        # [ 0 ; actualRange / 2]
 
 # Calculated servo turn values
-actualStart_Degrees = digitalOffset + 2 * analogOffset + marginAngle
-actualEnd_Degrees = digitalRange + digitalOffset - marginAngle
-actualRange_Degrees = actualEnd_Degrees - actualStart_Degrees
+servo_actualStart_Degrees = servo_digitalOffset + 2 * servo_analogOffset + servo_marginAngle
+servo_actualEnd_Degrees = servo_digitalRange + servo_digitalOffset - servo_marginAngle
+servo_actualRange_Degrees = servo_actualEnd_Degrees - servo_actualStart_Degrees
 
 # Position values
-currentPosition_Percentage = 0      # [ -100 ; 100 ]
+servo_currentPosition_Percentage = 0      # [ -100 ; 100 ]
 
 # ---------- Functions ----------
 # --- Machine functions ---
@@ -36,7 +36,7 @@ def servo_AnalogToDegrees(position_Analog):
 
 # Convert percentage to degrees
 def servo_PercentageToDegrees(position_Percentage):
-    positionProcessed_Degrees = analogRange - ((position_Percentage / 100 + 1) / 2 * actualRange_Degrees + actualStart_Degrees)
+    positionProcessed_Degrees = servo_analogRange - ((position_Percentage / 100 + 1) / 2 * servo_actualRange_Degrees + servo_actualStart_Degrees)
     return positionProcessed_Degrees
 
 # Turn function using percentage as input
@@ -45,8 +45,8 @@ def servo_TurnPercentage(position_Percentage):
     positionProcessed_Percentage = min(max(position_Percentage, -100), 100)
 
     # Save new position
-    global currentPosition_Percentage
-    currentPosition_Percentage = positionProcessed_Percentage
+    global servo_currentPosition_Percentage
+    servo_currentPosition_Percentage = positionProcessed_Percentage
 
     # Convert position from percentage to degrees
     positionProcessed_Degrees = servo_PercentageToDegrees(positionProcessed_Percentage)
@@ -55,7 +55,6 @@ def servo_TurnPercentage(position_Percentage):
     positionProcessed_Analog = servo_DegreesToAnalog(positionProcessed_Degrees)
     # Turn
     servo_TurnAnalog(positionProcessed_Analog)
-
 
     print(positionProcessed_Percentage, "% | ", positionProcessed_Degrees, "° | ", positionProcessed_Analog)
 
@@ -82,17 +81,17 @@ def servo_FullRight():
 
 # Turn left n degrees
 def servo_TurnLeft(positionChange_Percentage):
-    global currentPosition_Percentage
-    currentPosition_Percentage -= positionChange_Percentage
-    servo_TurnPercentage(currentPosition_Percentage)
+    global servo_currentPosition_Percentage
+    servo_currentPosition_Percentage -= positionChange_Percentage
+    servo_TurnPercentage(servo_currentPosition_Percentage)
 
 # Turn right n degrees
 def servo_TurnRight(positionChange_Percentage):
-    global currentPosition_Percentage
-    currentPosition_Percentage += positionChange_Percentage
-    servo_TurnPercentage(currentPosition_Percentage)
+    global servo_currentPosition_Percentage
+    servo_currentPosition_Percentage += positionChange_Percentage
+    servo_TurnPercentage(servo_currentPosition_Percentage)
 
 
     
 # Default position
-servo_SetPosition(currentPosition_Percentage)
+servo_SetPosition(servo_currentPosition_Percentage)
