@@ -26,14 +26,14 @@ Future<void> updateRecognitions(var inputRecognitions) async {
 }
 
 // Socket
-const udpIpAddress = '192.168.4.1';
-const udpPort = 80;
+const tcpIpAddress = '192.168.4.1';
+const tcpPort = 80;
 
 Socket? socketTCP;
 Future<void> connectSocket() async {
   try {
-    Socket socket = await Socket.connect(udpIpAddress, udpPort,
-        timeout: const Duration(milliseconds: 1000));
+    Socket socket = await Socket.connect(tcpIpAddress, tcpPort,
+        timeout: const Duration(milliseconds: 3000));
     socketTCP = socket;
   } catch (error) {
     throw Exception(error);

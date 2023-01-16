@@ -4,21 +4,21 @@ import 'package:tesla_mini/debugger.dart';
 import 'package:tesla_mini/globals.dart' as globals;
 import 'dart:convert';
 
-// Default udp server address
-const isUDPServerActive = true;
+// Default tcp server address
+const isTCPServerActive = true;
 
 String packageMaker(String title, String data) {
   return json.encode({'title': title, 'data': data});
 }
 
-// Send a test request to udp server
+// Send a test request to tcp server
 void testTCP() {
   sendDataTCP('state', 'Testing');
 }
 
-// Send data to udp server
+// Send data to tcp server
 void sendDataTCP(String title, String data) {
-  if (isUDPServerActive) {
+  if (isTCPServerActive) {
     sendRequestTCP(packageMaker(title, data));
   }
 }

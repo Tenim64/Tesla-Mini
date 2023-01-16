@@ -5,7 +5,7 @@ import 'package:camera/camera.dart';
 import 'package:tesla_mini/globals.dart';
 import 'globals.dart' as globals;
 import 'package:tesla_mini/tensorflow.dart';
-import 'package:tesla_mini/udpserver.dart';
+import 'package:tesla_mini/tcpserver.dart';
 import 'package:tesla_mini/debugger.dart';
 import 'package:image/image.dart' as img;
 import 'package:flutter/foundation.dart';

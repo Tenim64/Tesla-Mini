@@ -7,7 +7,8 @@ import 'package:tesla_mini/globals.dart';
 import 'package:tesla_mini/menubuttons.dart';
 import 'package:tesla_mini/tensorflow.dart';
 import 'package:tesla_mini/globals.dart' as globals;
-import 'package:tesla_mini/udpserver.dart';
+import 'package:tesla_mini/tcpserver.dart';
+import 'package:tesla_mini/httpserver.dart';
 
 // UI
 class Interface extends StatefulWidget {
@@ -50,9 +51,9 @@ class InterfaceState extends State<Interface> {
                 )),
             TextButton(
                 onPressed: () {
-                  testTCP();
+                  testHTTP();
                 },
-                child: const Text('Test UDP')),
+                child: const Text('Test HTTP')),
             TextButton(
                 onPressed: () {
                   restartButton();
