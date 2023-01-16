@@ -87,7 +87,7 @@ import machine
 
 # ---------- Variables ----------
 # Servo pin number
-servoPin = 1
+servoPin = 25
 
 # Servo turn values
 servo_analogRange = 225       # [ 0 ; 360 ]

@@ -1,5 +1,8 @@
 import os
 import sys
+import gc
+gc.collect()
+gc.mem_free()
 
 import machine
 import time

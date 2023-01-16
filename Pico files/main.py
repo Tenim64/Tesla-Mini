@@ -6,6 +6,9 @@ from time import sleep
 from machine import Pin
 import network
 import socket
+import gc
+gc.collect()
+gc.mem_free()
 
 
 # ---------- Variables ----------
@@ -165,7 +168,10 @@ def setupNetwork():
     wlan.active(True)
     # Wait to start
     while wlan.active() == False:
+        gc.collect()
+        gc.mem_free()
         wlan.active(True)
+        sleep(0.1)
         pass
     print("Acces point active on IP: " + wlan.ifconfig()[0])
     print("Connect to \"" + ssid + "\" using the password \"" + password + "\"")
