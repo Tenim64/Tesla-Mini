@@ -54,7 +54,10 @@
             function sendData(data){
                 console.log(data);
                 let xhr = new XMLHttpRequest();
-                xhr.open("GET", ("/"+data));
+                let url = "/?";
+                url += "data=" + data;
+                url += "&title=control";
+                xhr.open("GET", url);
                 xhr.send();
             }
             let buttons = document.getElementsByClassName("button");

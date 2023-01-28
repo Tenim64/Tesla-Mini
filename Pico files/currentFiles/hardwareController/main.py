@@ -1,45 +1,56 @@
-# -------------------------- Main program --------------------------
+# -------------------------------- Pre-script --------------------------------
 # type:ignore
+# -> this causes IDEs to not complain about what type a variable is
+# -> who doesn't like simply ignoring errors when you can
+
+
 # ---------- Packages ----------
-import json
-from time import sleep
-from machine import Pin
-import network
-import socket
 import gc
+import machine
+from machine import Pin
+from time import sleep
+
+
+# ---------- Clean memory ----------
+# Increase run time and decrease chance of code failure
+# Collect possible garbage/cache
 gc.collect()
+# Free memory if possible
 gc.mem_free()
 
 
 # ---------- Variables ----------
-wlan = network.WLAN(network.AP_IF)
-s = None
-sConn = None
+uart = None
+# Servo pin number
+servoPin = 25
+# Motor pin number
+motorPin_A_1A = 27
+motorPin_A_1B = 26
+
+# ---------- Debug tools ----------
+print('Preparing software...')
+
+# LED controller
+# Set default LED state
+led.off()
+# Function to blink n times
+def blink(blinks):
+    # Simple blink script
+    for i in range(0, blinks):
+        led.toggle()
+        sleep(0.1)
+        led.toggle()
+        sleep(0.2)
+    # Extra sleep in case of another blink function call
+    sleep(0.3)
 
 
-# ---------- Functions ----------
-def processData(data):
-    blink(1)
-    print("Data received!")
-
-    global sConn
-
-    # Check data is coming from a webbrowser or the app
-    # Then process it based on the source
-    if data.split()[0] == "GET":
-        print("GET")
-
-        url = data.split()[1]
-        sendWebpage(url)
-
-        data_title = "control"
-        data_data = data.split()[1][1:]
-    else:
-        data_object = json.loads(data)
-        data_title = data_object["title"]
-        data_data = data_object["data"]
     
-    print(data_title,"-",data_data)
+# -------------------------------- Program --------------------------------
+def processData(data):
+    data_title, _, data_data = data.partition("\\-\\")
+    print(f"{data_title} - {data_data}")
+
     if data_title and data_data:
 
         if (data_title == "state"):
@@ -64,38 +75,7 @@ def processData(data):
             if (data_data == "brake"):
                 motor_Brake()
 
-    sConn.close() 
 
-
-def testProcess():
-    servo_SetPosition(-100)
-    sleep(1)
-    servo_SetPosition(0)
-    sleep(1)
-    servo_SetPosition(100)
-    sleep(1)
-    servo_SetPosition(0)
-    
-    sleep(1)
-
-    motor_Forwards(100)
-    sleep(1)
-    motor_Brake()
-    sleep(0.5)
-    motor_Backwards(100)
-    sleep(1)
-    motor_Brake()
-    sleep(0.5)
-    motor_Forwards(10)
-    sleep(1)
-    motor_Brake()
-    sleep(0.5)
-    motor_Backwards(10)
-    sleep(1)
-    motor_Brake()
-
-
-# ---------- Program ----------
 def boot():
     print('Software ready!')
     while True:
@@ -104,177 +84,34 @@ def boot():
         main()
 
 def main():
-    try:
-        # Set the default turn position
-        servo_SetPosition(servo_currentPosition_Percentage)
-        # Default motor state is stopped
-        motor_Brake()
-        # Stop possible previous network
-        stopNetwork()
-        # Setup the network
-        setupNetwork()
-        # Make a socket
-        makeSocket(wlan)
-        while True:
-            try:
-                # Receive data from the socket
-                receiveSocketData()
-            except Exception as e:
-                try:
-                    # Listen to the socket
-                    listenToSocket()
-                except Exception as e:
-                    # Remake a socket
-                    makeSocket(wlan)
-    except Exception as e:
-        print(e)
-
-
-
-# -------------------------- UDP receiver --------------------------
-# ---------- Packages ----------
-import network
-import socket
-from time import sleep
-from machine import Pin
-import select
-
-# ---------- Led ----------
-led = Pin("LED", Pin.OUT)
-led.off()
-def blink(blinks):
-  for i in range(0, blinks):
-    led.toggle()
-    sleep(0.1)
-    led.toggle()
-    sleep(0.2)
-  sleep(0.3)
-
-# ---------- Setup network ----------
-def setupNetwork():
-    global wlan
-    print('Setting up network...')
-    # Set network type
-    wlan = network.WLAN(network.AP_IF)
-    # Set the name and password of the WiFi AP
-    ssid = "Tesla Mini"
-    password = ".'.'.'.'"
-    # Create the WiFi AP
-    # ip, subnet, gateway, dns
-    wlan.ifconfig(('192.168.4.1', '255.255.255.0', '192.168.4.1', '8.8.8.8'))
-    wlan.config(essid=ssid, password=password)
-    # Start network
-    print('Starting network...')
-    wlan.active(True)
-    # Wait to start
-    while wlan.active() == False:
-        gc.collect()
-        gc.mem_free()
-        wlan.active(True)
-        sleep(0.1)
-        pass
-    print("Acces point active on IP: " + wlan.ifconfig()[0])
-    print("Connect to \"" + ssid + "\" using the password \"" + password + "\"")
-    blink(2)
-
-# ---- Stop network ----
-def stopNetwork():
-    global wlan
-    wlan.active(False)
-    print('Stopped network')
-
-# ---------- Connecting ----------
-def makeSocket(wlan):
-    global s
-    # Remove possible previous socket
-    try:
-        s.close() 
-    except Exception as e:
-        pass
-    # Create a socket
-    s = socket.socket()
-    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-    # Bind the socket to a local address and port
-    s.bind((wlan.ifconfig()[0], 80))
-    s.setblocking(0)
-    print("Socket bound")
-    listenToSocket()
-
-def listenToSocket():
-    global s, sConn
-    # Listen for incoming connections
-    s.listen()
-    print("Listening to socket")
-
-    # Accept an incoming connection
     while True:
         try:
-            sConn, sAddr = s.accept()
-            break
+        if uart.any()
+            buffer += uart.read().decode()
+            if "\\end\\" in buffer:
+                if "\\start\\" in buffer:
+                    data = buffer.replace("\\start\\","").replace("\\end\\","")
+                    processData(data)
+                    print("Serial data: ", data)
+                else:
+                    print("Corrupted data")
+                buffer = ""
         except Exception as e:
-            pass
-    blink(1)
-    print("Connection made")
+            print(e)
 
-def receiveSocketData():
-    global s, sConn
-    # Continuously receive data and process it
-    data = None
-    while True:
-        # Check if connection is still active
-        connected = select.select([s], [], [], 0)
-        if not connected:
-            print("Connection lost")
-            raise Exception("Connection lost")
-        # If there is data, process it
-        data = sConn.recv(1024).decode() 
-        if not data:
-            continue
-        if data != None:
-            processData(data)
 
-        data = None
+# -------------------------------- Serial --------------------------------
+# ---------- Functions ----------
+def setupSerial():
+    uart = machine.UART(0, baudrate=9600)
 
-# ---------- Send webpage ----------
-def sendWebpage(page):
-    global sConn
-    # If the request URL is not '/', return a 404 Not Found response
-    if page != '/':
-        response = 'HTTP/1.1 404 Not Found\n'
-        response += 'Content-Type: text/html\n'
-        response += '\n'
-        response += '<html><body>404 Not Found</body></html>\n'
-        sConn.send(response.encode()) 
-        return
-
-    # Page
-    webpageFile = open("./index.html", "r")
-    html = webpageFile.read()
-    html_compact = html.replace('\n', ' ').replace('\r', '')
-    webpageFile.close()
-
-    # Construct the response
-    response = 'HTTP/1.1 200 OK\n'
-    response += 'Content-Type: text/html\n'
-    response += '\n'
-    response += html_compact + '\n'
-    print("Send webpage")
-
-    # Send the response to the client
-    sConn.send(response.encode()) 
-
+def sendSerial(data):
+    uart.init(baudrate=9600, bits=8, parity=None, stop=1)
 
 
 
 # -------------------------- Servo controller -------------------------- 
-# ---------- Packages ----------
-import machine
-
-
 # ---------- Variables ----------
-# Servo pin number
-servoPin = 25
-
 # Servo turn values
 servo_analogRange = 225       # [ 0 ; 360 ]
 servo_digitalRange = 180      # [ 0 ; servo_analogRange ]
@@ -363,20 +200,11 @@ def servo_TurnRight(positionChange_Percentage):
 
 
 # -------------------------- Motor controller -------------------------- 
-# ---------- Packages ----------
-from machine import Pin,PWM
-from time import sleep
- 
-
 # ---------- Variables ----------
 # Current values
 motorCurrentSpeed = 0
 motorCurrentDirection = 0
 motorDefaultFrequency = 100
-
-# Servo pin number
-motorPin_A_1A = 27
-motorPin_A_1B = 26
 
 # Setup pins as PWM
 A_1A = PWM(Pin(motorPin_A_1A))
@@ -438,5 +266,7 @@ def motor_Brake():
 
 
 
-# -------------------------- Run program --------------------------
+
+
+# Run
 boot()
