@@ -233,7 +233,7 @@ def motor_SetSpeed(inputSpeedPercentage, direction):
     motorCurrentDirection = max(-1, min(1, round(motorCurrentDirection)))
 
     # Print current values
-    print(inputSpeedPercentage, 'in', direction)
+    print(motorCurrentSpeed, 'in', motorCurrentDirection)
 
     # Brake if the speed or direction is 0
     if inputSpeedPercentage is 0 or direction is 0:
