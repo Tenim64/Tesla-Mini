@@ -85,6 +85,13 @@ def boot():
         main()
 
 def main():
+    global uart
+    # Set up uart/serial
+    setupSerial()
+    # Set the default turn position
+    servo_SetPosition(servo_currentPosition_Percentage)
+    # Set the default motor speed
+    motor_SetSpeed(motorCurrentSpeed, motorCurrentDirection)
     while True:
         try:
             if uart.any():
@@ -104,9 +111,8 @@ def main():
 # -------------------------------- Serial --------------------------------
 # ---------- Functions ----------
 def setupSerial():
+    global uart
     uart = machine.UART(0, baudrate=9600)
-
-def sendSerial(data):
     uart.init(baudrate=9600, bits=8, parity=None, stop=1)
 
 
