@@ -92,6 +92,8 @@ def main():
     servo_SetPosition(servo_currentPosition_Percentage)
     # Set the default motor speed
     motor_SetSpeed(motorCurrentSpeed, motorCurrentDirection)
+    # Buffer for reading serial data
+    buffer = ""
     while True:
         try:
             if uart.any():
