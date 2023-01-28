@@ -1,0 +1,15 @@
+Invoer:
+ - Afbeelding
+    - Straat
+    - Verkeersborden
+ - StuurRichting			[-100% ; 100%]
+ - Snelheid				[-1,0 ; 1,0]
+ - Extra
+    - RijStijl				[-1,0 ; 1,0]	(Constante waardes per rij-stijl) (Traag, Passief, Aggresief, Dronken)
+    - VolgendeRouteInstructie
+       - Instructie			[0 ; +∞]	(Constante waardes per Instructie) (Links, Rechts, Parkeer)
+       - AfstandTotInstructie		[0 ; +∞]	(Aantal afslagen tot instructie)
+
+Uitvoer:
+ - StuurRichting			[-100% ; 100%]
+ - Snelheid				[-1,0 ; 1,0]

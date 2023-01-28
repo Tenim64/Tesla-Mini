@@ -1,0 +1,22 @@
+set route
+set rij stijl
+maak connectie
+auto status
+ - verbonden
+   - niet verbonden -> "?"
+   - connectie wordt gemaakt -> load icon (multi layered circles fading in and out)
+   - verbonden -> auto icon (ingereden via zijde)
+ - batterij
+   - plat -> rood
+   - opladen -> geel
+   - opgeladen -> groen
+ - Wifi/auto naam
+   - veranderbaar via potlood ernaast (als verbonden, anders "Niet verbonden")
+start rit
+train model
+model info
+app info
+inlog
+home scherm
+favoriete routes
+map maker
