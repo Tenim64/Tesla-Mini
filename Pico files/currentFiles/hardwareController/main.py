@@ -7,7 +7,7 @@
 # ---------- Packages ----------
 import gc
 import machine
-from machine import Pin
+from machine import Pin, PWM
 from time import sleep
 
 
@@ -21,6 +21,7 @@ gc.mem_free()
 
 # ---------- Variables ----------
 uart = None
+led = Pin("LED", Pin.OUT)
 # Servo pin number
 servoPin = 25
 # Motor pin number
@@ -86,16 +87,16 @@ def boot():
 def main():
     while True:
         try:
-        if uart.any()
-            buffer += uart.read().decode()
-            if "\\end\\" in buffer:
-                if "\\start\\" in buffer:
-                    data = buffer.replace("\\start\\","").replace("\\end\\","")
-                    processData(data)
-                    print("Serial data: ", data)
-                else:
-                    print("Corrupted data")
-                buffer = ""
+            if uart.any():
+                buffer += uart.read().decode()
+                if "\\end\\" in buffer:
+                    if "\\start\\" in buffer:
+                        data = buffer.replace("\\start\\","").replace("\\end\\","")
+                        processData(data)
+                        print("Serial data: ", data)
+                    else:
+                        print("Corrupted data")
+                    buffer = ""
         except Exception as e:
             print(e)
 
