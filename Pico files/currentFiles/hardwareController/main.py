@@ -67,8 +67,11 @@ def processData(data):
                 motor_Forwards(motorCurrentSpeed + 10)
             if (data_data == "backwards"):
                 global motorCurrentSpeed, motorCurrentDirection
-                motorCurrentDirection = -1
-                motor_Backwards(motorCurrentSpeed - 10)
+                if motorCurrentDirection == 1:
+                    motorCurrentDirection = -1
+                    motor_Backwards(10)
+                else:                    
+                    motor_Backwards(motorCurrentSpeed + 10)
             if (data_data == "left"):
                 servo_TurnLeft(10)
             if (data_data == "right"):
