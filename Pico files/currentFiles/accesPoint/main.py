@@ -29,6 +29,7 @@ s = None
 sConn = None
 uart = None
 led = Pin("LED", Pin.OUT)
+production = False
 
 
 # ---------- Debug tools ----------
@@ -39,6 +40,8 @@ print('Preparing software...')
 led.off()
 # Function to blink n times
 def blink(blinks):
+    if not production:
+        return
     # Simple blink script
     for i in range(0, blinks):
         led.toggle()
@@ -114,23 +117,34 @@ def processData(data):
     # Then process it based on the source
     if data.split()[0] == "GET":
         print("GET")
-
+        # Get URL
         url = data.split()[1]
-        sendWebpage(url)
-
+        # Get data from parameters from query inside url
         data_title = getQueryValue(url, "title")
         data_data = getQueryValue(url, "data")
+        
+        # If no data was found
+        if data_title == None:
+            # Send webpage
+            sendWebpage(url)
     else:
+        # Get data from json
         data_object = json.loads(data)
         data_title = data_object["title"]
         data_data = data_object["data"]
     
+    # If no data was found, return
     if data_title == None:
         return
 
+    # Send ACK message to client
+    sendACK()
+
+    # Send to data to RPI Pico
     print(f"{data_title} - {data_data}")
     sendSerial(f"{data_title}\\-\\{data_data}")
 
+    # Close connection
     sConn.close() 
 
 
@@ -244,6 +258,16 @@ def sendWebpage(page):
     # Send the response to the client
     sConn.send(response.encode()) 
     print("Sent webpage")
+    
+def sendACK():
+    global sConn
+    
+    # Make ACK response
+    response = 'HTTP/1.1 200 OK\n'
+    
+    # Send ACK
+    sConn.send(response.encode())  
+    print("Sent ACK")
 
 def getQueryValue(inputUrl, inputKey):
     # Split on first appearance of "?" to get the query
