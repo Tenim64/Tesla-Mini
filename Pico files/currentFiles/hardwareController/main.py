@@ -23,7 +23,7 @@ gc.mem_free()
 uart = None
 led = Pin("LED", Pin.OUT)
 # Servo pin number
-servoPin = 25
+servoPin = 22
 # Motor pin number
 motorPin_A_1A = 27
 motorPin_A_1B = 26
