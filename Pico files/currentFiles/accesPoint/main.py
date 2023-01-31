@@ -192,7 +192,7 @@ def makeSocket(wlan):
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     # Bind the socket to a local address and port
     s.bind((wlan.ifconfig()[0], 80))
-    s.setblocking(0)
+    s.setblocking(1)
     print("Socket bound")
     listenToSocket()
 
@@ -218,12 +218,11 @@ def receiveSocketData():
     data = None
     while True:
         # Check if connection is still active
-        connected = select.select([s], [], [], 0)
+        connected, _, _ = select.select([s], [], [], 0)
         if not connected:
-            print("Connection lost")
             raise Exception("Connection lost")
         # If there is data, process it
-        data = sConn.recv(1024).decode() 
+        data = sConn.recv(1024).decode()
         if not data:
             continue
         if data != None:
