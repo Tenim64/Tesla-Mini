@@ -27,6 +27,7 @@ servoPin = 22
 # Motor pin number
 motorPin_A_1A = 27
 motorPin_A_1B = 26
+production = False
 
 # ---------- Debug tools ----------
 print('Preparing software...')
@@ -36,6 +37,8 @@ print('Preparing software...')
 led.off()
 # Function to blink n times
 def blink(blinks):
+    if not production:
+        return
     # Simple blink script
     for i in range(0, blinks):
         led.toggle()
@@ -49,6 +52,8 @@ def blink(blinks):
     
 # -------------------------------- Program --------------------------------
 def processData(data):
+    global motorCurrentSpeed, motorCurrentDirection
+                
     data_title, _, data_data = data.partition("\\-\\")
     print(f"{data_title} - {data_data}")
 
@@ -56,17 +61,16 @@ def processData(data):
 
         if (data_title == "state"):
             if (data_data == "Testing"):
-                testProcess()
+                motor_SetSpeed(motorCurrentSpeed * -1 + 100, motorCurrentDirection * -1 + 1)
+                servo_SetPosition(servo_currentPosition_Percentage * -1 + 100)
             if (data_data == "Starting" or data_data == "Stopping"):
                 servo_SetPosition(servo_currentPosition_Percentage)
 
         if (data_title == "control"):
             if (data_data == "forwards"):
-                global motorCurrentSpeed, motorCurrentDirection
                 motorCurrentDirection = 1
                 motor_Forwards(motorCurrentSpeed + 10)
             if (data_data == "backwards"):
-                global motorCurrentSpeed, motorCurrentDirection
                 if motorCurrentDirection == 1:
                     motorCurrentDirection = -1
                     motor_Backwards(10)
@@ -216,7 +220,7 @@ def servo_TurnRight(positionChange_Percentage):
 # Current values
 motorCurrentSpeed = 0
 motorCurrentDirection = 0
-motorDefaultFrequency = 100
+motorDefaultFrequency = 1000
 
 # Setup pins as PWM
 A_1A = PWM(Pin(motorPin_A_1A))
@@ -233,7 +237,7 @@ def motor_SetSpeed(inputSpeedPercentage, direction):
     # Set current values
     global motorCurrentSpeed, motorCurrentDirection
     motorCurrentSpeed = max(0, min(100, inputSpeedPercentage))
-    motorCurrentDirection = max(-1, min(1, round(motorCurrentDirection)))
+    motorCurrentDirection = max(-1, min(1, round(direction)))
 
     # Print current values
     print(motorCurrentSpeed, 'in', motorCurrentDirection)

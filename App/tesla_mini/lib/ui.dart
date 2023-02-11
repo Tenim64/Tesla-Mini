@@ -51,9 +51,9 @@ class InterfaceState extends State<Interface> {
                 )),
             TextButton(
                 onPressed: () {
-                  testHTTP();
+                  testTCP();
                 },
-                child: const Text('Test HTTP')),
+                child: const Text('Test TCP')),
             TextButton(
                 onPressed: () {
                   restartButton();

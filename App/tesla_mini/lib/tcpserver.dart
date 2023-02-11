@@ -3,6 +3,7 @@ import 'dart:core';
 import 'package:tesla_mini/debugger.dart';
 import 'package:tesla_mini/globals.dart' as globals;
 import 'dart:convert';
+import 'dart:io';
 
 // Default tcp server address
 const isTCPServerActive = true;
@@ -31,6 +32,7 @@ Future<void> sendRequestTCP(String data) async {
     }
     // Send data
     globals.socketTCP?.write(data);
+    globals.socketTCP?.close();
     if (jsonDecode(data)['data'] == 'Testing') {
       // Print in debug console
       printMessage("Data sent: $data");
@@ -50,4 +52,5 @@ Future<void> sendRequestTCP(String data) async {
         globals.closeDialog, 1);
     globals.updateDialog();
   }
+  globals.socketTCP = null;
 }

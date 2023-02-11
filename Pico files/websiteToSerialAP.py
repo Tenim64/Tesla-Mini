@@ -29,7 +29,7 @@ s = None
 sConn = None
 uart = None
 led = Pin("LED", Pin.OUT)
-production = False
+production = True
 
 
 # ---------- Debug tools ----------
@@ -70,8 +70,6 @@ def main():
             try:
                 # Receive data from the socket
                 receiveSocketData()
-                # Receive data from the socket
-                closeSocket()
             except Exception as e:
                 print(e)
                 try:
@@ -115,10 +113,25 @@ def processData(data):
 
     global sConn
 
-    # Get data from json
-    data_object = json.loads(data)
-    data_title = data_object["title"]
-    data_data = data_object["data"]
+    # Check data is coming from a webbrowser or the app
+    # Then process it based on the source
+    if data.split()[0] == "GET":
+        print("GET")
+        # Get URL
+        url = data.split()[1]
+        # Get data from parameters from query inside url
+        data_title = getQueryValue(url, "title")
+        data_data = getQueryValue(url, "data")
+        
+        # If no data was found
+        if data_title == None:
+            # Send webpage
+            sendWebpage(url)
+    else:
+        # Get data from json
+        data_object = json.loads(data)
+        data_title = data_object["title"]
+        data_data = data_object["data"]
     
     # If no data was found, return
     if data_title != None:
@@ -132,7 +145,6 @@ def processData(data):
 
 # ---------- Setup network ----------
 def setupNetwork():
-    
     global wlan
     print('Setting up network...')
     # Set network type
@@ -150,9 +162,10 @@ def setupNetwork():
     # Wait to start
     while wlan.active() == False:
         wlan.active(True)
+        sleep(0.1)
         pass
     print("Acces point active on IP: " + wlan.ifconfig()[0])
-    print("Connect to \"" + ssid + "\" using the password \"" + password + "\"")    
+    print("Connect to \"" + ssid + "\" using the password \"" + password + "\"")
     blink(2)
 
 # ---- Stop network ----
@@ -166,7 +179,7 @@ def makeSocket(wlan):
     global s
     # Remove possible previous socket
     try:
-        s.close()
+        s.close() 
     except Exception as e:
         pass
     # Create a socket
@@ -191,14 +204,18 @@ def listenToSocket():
             break
         except Exception as e:
             pass
-    print("Connection made")    
     blink(1)
+    print("Connection made")
 
 def receiveSocketData():
     global s, sConn
     # Continuously receive data and process it
     data = None
     while True:
+        # Check if connection is still active
+        connected, _, _ = select.select([s], [], [], 0)
+        if not connected:
+            raise Exception("Connection lost")
         # If there is data, process it
         data = sConn.recv(1024).decode()
         if not data:
@@ -207,11 +224,66 @@ def receiveSocketData():
             processData(data)
 
         data = None
-        
-def closeSocket():
-    global s
+
+# ---------- Send webpage ----------
+def sendWebpage(page):
+    global sConn
+    # If the request URL is not '/', return a 404 Not Found response
+    if page != '/':
+        response = 'HTTP/1.1 404 Not Found\n'
+        response += 'Content-Type: text/html\n'
+        response += '\n'
+        response += '<html><body>404 Not Found</body></html>\n'
+        sConn.send(response.encode()) 
+        return
+
+    # Page
+    webpageFile = open("./index.html", "r")
+    html = webpageFile.read()
+    html_compact = html.replace('\n', ' ').replace('\r', '')
+    webpageFile.close()
+
+    # Construct the response
+    response = 'HTTP/1.1 200 OK\n'
+    response += 'Content-Type: text/html\n'
+    response += '\n'
+    response += html_compact + '\n'
+
+    # Send the response to the client
+    sConn.send(response.encode()) 
+    print("Sent webpage")
     
-    s.close()
-        
+def sendACK():
+    global sConn
+    
+    # Make ACK response
+    response = 'HTTP/1.1 200 OK\n'
+    
+    # Send ACK
+    sConn.send(response.encode())  
+    print("Sent ACK")
+
+def getQueryValue(inputUrl, inputKey):
+    # Split on first appearance of "?" to get the query
+    path, _, queryString = inputUrl.partition('?')
+    # Safety check, if "?" was found
+    if queryString:
+        # Split queries per key
+        queryParameters = queryString.split("&")
+        # Loop over all the queries
+        for parameter in queryParameters:
+            # Split the key and value
+            key, _, value = parameter.partition("=")
+            # Check if the key matches the input
+            if key == inputKey:
+                # Return value
+                return value
+    # If key wasn't found, send None
+    return None
+
+
+
+
+
 # Run
 boot()

@@ -77,3 +77,4 @@ def motor_Brake():
 
 # Default stopped
 motor_Brake()
+motor_SetSpeed(50, 1)

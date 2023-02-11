@@ -6,7 +6,7 @@ import 'package:tesla_mini/globals.dart' as globals;
 
 // Default http server address
 const httpServerAddress = 'http://192.168.4.1';
-const isHTTPServerActive = true;
+const isHTTPServerActive = false;
 
 // Send a test request to http server
 void testHTTP() {

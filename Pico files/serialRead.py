@@ -13,8 +13,10 @@ def setupSerial():
 
 # ---------- Main ----------
 def main():
+    buffer = ""
+    setupSerial()
     while True:
-        if uart.any()
+        if uart.any():
             buffer += uart.read().decode()
             if "\\end\\" in buffer:
                 if "\\start\\" in buffer:
