@@ -33,76 +33,23 @@ Future<void> main() async {
   // App
   runApp(
     MaterialApp(
-      theme: ThemeData.dark().copyWith(
+      theme: ThemeData.light().copyWith(
+          textTheme: ThemeData.light().textTheme.apply(
+                fontFamily: 'Myanmar Text',
+              ),
+          primaryTextTheme: ThemeData.light().textTheme.apply(
+                fontFamily: 'Myanmar Text',
+              ),
           textButtonTheme: TextButtonThemeData(
             style: TextButton.styleFrom(
-                foregroundColor: const Color.fromARGB(255, 255, 255, 255),
-                textStyle: const TextStyle(
-                  fontSize: 20,
-                )),
+              textStyle: const TextStyle(
+                fontSize: 20,
+              ),
+            ),
           ),
           cupertinoOverrideTheme:
-              const CupertinoThemeData(brightness: Brightness.dark)),
-      home: CameraScreen(
-        camera: firstCamera,
-      ),
+              const CupertinoThemeData(brightness: Brightness.light)),
+      home: const HomePage(),
     ),
   );
-}
-
-// Create the camera screen
-class CameraScreen extends StatefulWidget {
-  const CameraScreen({
-    super.key,
-    required this.camera,
-  });
-
-  final CameraDescription camera;
-
-  @override
-  CameraScreenState createState() => CameraScreenState();
-}
-
-class CameraScreenState extends State<CameraScreen> {
-  late CameraController _controller;
-  late Future<void> _initializeControllerFuture;
-
-  @override
-  void initState() {
-    super.initState();
-    // To display the current output from the Camera,
-    // create a CameraController.
-    _controller = CameraController(
-      // Get a specific camera from the list of available cameras.
-      widget.camera,
-      // Define the resolution to use.
-      ResolutionPreset.max,
-      // Disable audio recording
-      enableAudio: false,
-      // Format of the images
-      imageFormatGroup: ImageFormatGroup.yuv420,
-    );
-
-    // Next, initialize the controller. This returns a Future.
-    _initializeControllerFuture = _controller.initialize();
-
-    // Load Tensorflow models
-    tfLoadModel('Android');
-  }
-
-  @override
-  void dispose() {
-    // Dispose app
-    super.dispose();
-    // Dispose of the controller when the widget is disposed.
-    _controller.stopImageStream();
-    _controller.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Interface(
-        pInitializeControllerFuture: _initializeControllerFuture,
-        pController: _controller);
-  }
 }

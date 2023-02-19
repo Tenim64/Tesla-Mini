@@ -45,6 +45,7 @@ dependencies:
       ref: 783f15e5a87126159147d8ea30b98eea9207ac70
   firebase_core:
   firebase_ml_model_downloader: 
+  font_awesome_flutter: ^10.4.0
 
 dependency_overrides:
   camera_avfoundation: 0.9.7+1

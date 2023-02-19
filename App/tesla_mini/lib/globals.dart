@@ -32,8 +32,7 @@ const tcpPort = 80;
 Socket? socketTCP;
 Future<void> connectSocket() async {
   try {
-    Socket socket = await Socket.connect(tcpIpAddress, tcpPort,
-        timeout: const Duration(milliseconds: 3000));
+    Socket socket = await Socket.connect(tcpIpAddress, tcpPort, timeout: const Duration(milliseconds: 3000));
     socketTCP = socket;
   } catch (error) {
     throw Exception(error);
@@ -42,15 +41,11 @@ Future<void> connectSocket() async {
 
 // Dialog
 final dialogNotifier = ValueNotifier<int>(0);
-String dialogTitle = "Title",
-    dialogContent = "Content",
-    dialogBtn1Content = "Cancel",
-    dialogBtn2Content = "Ok";
+String dialogTitle = "Title", dialogContent = "Content", dialogBtn1Content = "Cancel", dialogBtn2Content = "Ok";
 int dialogButtonCount = 2;
 Function dialogBtn1Function = () {}, dialogBtn2Function = () {};
 
-void setDialog(title, content, btn1Content, btn1Function, btn2Content,
-    btn2Function, buttonCount) {
+void setDialog(title, content, btn1Content, btn1Function, btn2Content, btn2Function, buttonCount) {
   dialogTitle = title;
   dialogContent = content;
   dialogBtn1Content = btn1Content;
@@ -68,3 +63,12 @@ void closeDialog(context) {
   Navigator.of(context).pop();
   dialogNotifier.value -= 1;
 }
+
+final connectionStateNotifier = ValueNotifier<bool>(false);
+final carStateNotifier = ValueNotifier<bool>(false);
+// -1 = disconnected | 0 = connecting/unknown | 1 = connected
+int connectionState = -1;
+// -1 = low battery | 0 = low charging | 1 = charged
+int carState = -1;
+
+String carName = "Tesla Mini";

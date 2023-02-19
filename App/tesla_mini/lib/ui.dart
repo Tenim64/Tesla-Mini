@@ -1,4 +1,4 @@
-// Packages
+// ---------- Packages
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -9,22 +9,482 @@ import 'package:tesla_mini/tensorflow.dart';
 import 'package:tesla_mini/globals.dart' as globals;
 import 'package:tesla_mini/tcpserver.dart';
 import 'package:tesla_mini/httpserver.dart';
+import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
-// UI
-class Interface extends StatefulWidget {
-  const Interface(
-      {super.key,
-      required this.pInitializeControllerFuture,
-      required this.pController});
-
-  final Future<void> pInitializeControllerFuture;
-  final CameraController pController;
-
-  @override
-  InterfaceState createState() => InterfaceState();
+// ---------- UI
+String welcomeText() {
+  final currentHour = DateTime.now().hour;
+  if (currentHour < 6) {
+    return "Good evening!";
+  }
+  if (currentHour < 12) {
+    return "Good morning!";
+  }
+  if (currentHour < 18) {
+    return "Good afternoon!";
+  }
+  return "Good evening!";
 }
 
-class InterfaceState extends State<Interface> {
+// ---- Home page
+class HomePage extends StatefulWidget {
+  const HomePage({super.key});
+
+  @override
+  HomePageState createState() => HomePageState();
+}
+
+class HomePageState extends State<HomePage> {
+  String carName = "Tesla Mini";
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 242, 242, 242),
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsetsDirectional.all(24),
+          child: Column(children: [
+            Stack(
+              children: [
+                Column(
+                  children: [
+                    Container(
+                      width: double.infinity,
+                      child: Padding(
+                        padding: const EdgeInsetsDirectional.only(top: 0, end: 32),
+                        child: FittedBox(
+                            fit: BoxFit.fitWidth,
+                            child: Text(
+                              welcomeText(),
+                              textAlign: TextAlign.start,
+                              style: const TextStyle(fontSize: 100, fontWeight: FontWeight.bold),
+                            )),
+                      ),
+                    ),
+                    Container(
+                      width: double.infinity,
+                      child: Padding(
+                        padding: EdgeInsetsDirectional.only(start: 4, end: MediaQuery.of(context).size.width * 0.24),
+                        child: const FittedBox(
+                            fit: BoxFit.fitWidth,
+                            child: Text(
+                              "Your Tesla Mini is waiting for you",
+                              textAlign: TextAlign.start,
+                              style: TextStyle(fontSize: 100),
+                            )),
+                      ),
+                    )
+                  ],
+                ),
+              ],
+            ),
+            Stack(
+              children: [
+                Padding(
+                  padding: const EdgeInsetsDirectional.only(top: 24),
+                  child: Container(
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color.fromARGB(255, 226, 226, 226),
+                      borderRadius: BorderRadius.circular(24),
+                      shape: BoxShape.rectangle,
+                    ),
+                    child: Column(
+                      children: [
+                        Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(24, 8, 0, 0),
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: FittedBox(
+                                  fit: BoxFit.scaleDown,
+                                  child: Text(
+                                    globals.carName,
+                                    style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.075, fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsetsDirectional.only(bottom: 4),
+                                child: FittedBox(
+                                  fit: BoxFit.fitHeight,
+                                  child: IconButton(
+                                    icon: const FittedBox(
+                                      fit: BoxFit.fitHeight,
+                                      child: Opacity(
+                                        opacity: 0.6,
+                                        child: Icon(
+                                          Icons.edit_outlined,
+                                          color: Color(0xFF808080),
+                                          size: 100,
+                                        ),
+                                      ),
+                                    ),
+                                    onPressed: () {
+                                      printMessage("*Edit name*");
+                                    },
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsetsDirectional.fromSTEB(16, 4, 16, 16),
+                          child: Row(
+                            children: [
+                              ValueListenableBuilder(
+                                  valueListenable: globals.connectionStateNotifier,
+                                  builder: (context, value, child) {
+                                    return Expanded(
+                                      child: GestureDetector(
+                                        onTap: () {
+                                          connectionStateNotifier.notifyListeners();
+                                          globals.connectionState += 1;
+                                          printMessage(globals.connectionState);
+                                        },
+                                        child: Container(
+                                          decoration: BoxDecoration(
+                                            borderRadius: BorderRadius.circular(24),
+                                            shape: BoxShape.rectangle,
+                                            color: const Color.fromARGB(255, 200, 200, 200),
+                                          ),
+                                          child: Padding(
+                                            padding: const EdgeInsetsDirectional.all(12),
+                                            child: Column(children: [
+                                              AspectRatio(
+                                                aspectRatio: 1 / 1,
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    borderRadius: BorderRadius.circular(20),
+                                                    shape: BoxShape.rectangle,
+                                                    color: const Color.fromARGB(255, 242, 242, 242),
+                                                  ),
+                                                  child: Padding(
+                                                    padding: const EdgeInsetsDirectional.all(20),
+                                                    child: Stack(children: [
+                                                      if (globals.connectionState == -1)
+                                                        const Align(
+                                                          alignment: AlignmentDirectional(0, 0),
+                                                          child: FittedBox(
+                                                            fit: BoxFit.fill,
+                                                            child: FaIcon(
+                                                              FontAwesomeIcons.xmark,
+                                                              color: Color(0xFFE30000),
+                                                              size: 500,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      if (globals.connectionState == 0)
+                                                        const Align(
+                                                          alignment: AlignmentDirectional(0, 0),
+                                                          child: FittedBox(
+                                                            fit: BoxFit.fill,
+                                                            child: FaIcon(
+                                                              FontAwesomeIcons.wifi,
+                                                              color: Color(0xFFFFB800),
+                                                              size: 500,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      if (globals.connectionState == 1)
+                                                        const Align(
+                                                          alignment: AlignmentDirectional(0, 0),
+                                                          child: FittedBox(
+                                                            fit: BoxFit.fill,
+                                                            child: FaIcon(
+                                                              FontAwesomeIcons.check,
+                                                              color: Color(0xFF2060F2),
+                                                              size: 500,
+                                                            ),
+                                                          ),
+                                                        ),
+                                                    ]),
+                                                  ),
+                                                ),
+                                              ),
+                                              Padding(
+                                                padding: const EdgeInsetsDirectional.only(top: 8),
+                                                child: AspectRatio(
+                                                  aspectRatio: 16 / 5,
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      borderRadius: BorderRadius.circular(20),
+                                                      shape: BoxShape.rectangle,
+                                                      color: const Color.fromARGB(255, 242, 242, 242),
+                                                    ),
+                                                    child: Padding(
+                                                      padding: const EdgeInsetsDirectional.fromSTEB(16, 7, 16, 7),
+                                                      child: FittedBox(
+                                                        fit: BoxFit.scaleDown,
+                                                        child: Stack(
+                                                          children: [
+                                                            if (globals.connectionState == -1)
+                                                              const Text(
+                                                                'Disconnected',
+                                                                textAlign: TextAlign.center,
+                                                                style: TextStyle(
+                                                                  color: Color(0xFFE30000),
+                                                                  fontSize: 100,
+                                                                  fontWeight: FontWeight.bold,
+                                                                  height: 1.25,
+                                                                ),
+                                                              ),
+                                                            if (globals.connectionState == 0)
+                                                              const Text(
+                                                                'Connecting',
+                                                                textAlign: TextAlign.center,
+                                                                style: TextStyle(
+                                                                  color: Color(0xFFFFB800),
+                                                                  fontSize: 100,
+                                                                  fontWeight: FontWeight.bold,
+                                                                  height: 1.25,
+                                                                ),
+                                                              ),
+                                                            if (globals.connectionState == 1)
+                                                              const Text(
+                                                                'Connected',
+                                                                textAlign: TextAlign.center,
+                                                                style: TextStyle(color: Color(0xFF2060F2), fontSize: 100, fontWeight: FontWeight.bold, height: 1.25),
+                                                              ),
+                                                          ],
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ),
+                                            ]),
+                                          ),
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                              const VerticalDivider(width: 16),
+                              ValueListenableBuilder(
+                                valueListenable: globals.connectionStateNotifier,
+                                builder: (context, value, child) {
+                                  return ValueListenableBuilder(
+                                    valueListenable: globals.carStateNotifier,
+                                    builder: (context, value, child) {
+                                      return Expanded(
+                                        child: GestureDetector(
+                                          onTap: () {
+                                            globals.carState += 1;
+                                            globals.carStateNotifier.value = !globals.carStateNotifier.value;
+                                            printMessage(globals.carState);
+                                          },
+                                          child: Container(
+                                            decoration: BoxDecoration(
+                                              borderRadius: BorderRadius.circular(24),
+                                              shape: BoxShape.rectangle,
+                                              color: const Color.fromARGB(255, 200, 200, 200),
+                                            ),
+                                            child: Padding(
+                                              padding: const EdgeInsetsDirectional.all(12),
+                                              child: Column(children: [
+                                                AspectRatio(
+                                                  aspectRatio: 1 / 1,
+                                                  child: Container(
+                                                    decoration: BoxDecoration(
+                                                      borderRadius: BorderRadius.circular(20),
+                                                      shape: BoxShape.rectangle,
+                                                      color: const Color.fromARGB(255, 242, 242, 242),
+                                                    ),
+                                                    child: Padding(
+                                                      padding: const EdgeInsetsDirectional.all(20),
+                                                      child: Stack(children: [
+                                                        if (globals.connectionState == -1 || globals.connectionState == 0) ...[
+                                                          const Align(
+                                                            alignment: AlignmentDirectional(0, 0),
+                                                            child: FittedBox(
+                                                              fit: BoxFit.fill,
+                                                              child: FaIcon(
+                                                                FontAwesomeIcons.xmark,
+                                                                color: Color(0xFFE30000),
+                                                                size: 500,
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ] else ...[
+                                                          if (globals.carState == -1)
+                                                            const Align(
+                                                              alignment: AlignmentDirectional(0, 0),
+                                                              child: FittedBox(
+                                                                fit: BoxFit.fill,
+                                                                child: FaIcon(
+                                                                  FontAwesomeIcons.batteryEmpty,
+                                                                  color: Color(0xFFE35200),
+                                                                  size: 500,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          if (globals.carState == 0)
+                                                            const Align(
+                                                              alignment: AlignmentDirectional(0, 0),
+                                                              child: FittedBox(
+                                                                fit: BoxFit.fill,
+                                                                child: FaIcon(
+                                                                  FontAwesomeIcons.bolt,
+                                                                  color: Color(0xFFDFBB00),
+                                                                  size: 500,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                          if (globals.carState == 1)
+                                                            const Align(
+                                                              alignment: AlignmentDirectional(0, 0),
+                                                              child: FittedBox(
+                                                                fit: BoxFit.fill,
+                                                                child: FaIcon(
+                                                                  FontAwesomeIcons.batteryFull,
+                                                                  color: Color(0xFF00DF09),
+                                                                  size: 500,
+                                                                ),
+                                                              ),
+                                                            ),
+                                                        ]
+                                                      ]),
+                                                    ),
+                                                  ),
+                                                ),
+                                                Padding(
+                                                  padding: const EdgeInsetsDirectional.only(top: 8),
+                                                  child: AspectRatio(
+                                                    aspectRatio: 16 / 5,
+                                                    child: Container(
+                                                      decoration: BoxDecoration(
+                                                        borderRadius: BorderRadius.circular(20),
+                                                        shape: BoxShape.rectangle,
+                                                        color: const Color.fromARGB(255, 242, 242, 242),
+                                                      ),
+                                                      child: Padding(
+                                                        padding: const EdgeInsetsDirectional.fromSTEB(16, 7, 16, 7),
+                                                        child: FittedBox(
+                                                          fit: BoxFit.scaleDown,
+                                                          child: Stack(children: [
+                                                            if (globals.connectionState == -1 || globals.connectionState == 0) ...[
+                                                              const Text(
+                                                                'Disconnected',
+                                                                textAlign: TextAlign.center,
+                                                                style: TextStyle(
+                                                                  color: Color(0xFFE30000),
+                                                                  fontSize: 100,
+                                                                  fontWeight: FontWeight.bold,
+                                                                  height: 1.25,
+                                                                ),
+                                                              ),
+                                                            ] else ...[
+                                                              if (globals.carState == -1)
+                                                                const Text(
+                                                                  'Low battery',
+                                                                  textAlign: TextAlign.center,
+                                                                  style: TextStyle(
+                                                                    color: Color(0xFFE35200),
+                                                                    fontSize: 100,
+                                                                    fontWeight: FontWeight.bold,
+                                                                    height: 1.25,
+                                                                  ),
+                                                                ),
+                                                              if (globals.carState == 0)
+                                                                const Text(
+                                                                  'Charging',
+                                                                  textAlign: TextAlign.center,
+                                                                  style: TextStyle(
+                                                                    color: Color(0xFFDFBB00),
+                                                                    fontSize: 100,
+                                                                    fontWeight: FontWeight.bold,
+                                                                    height: 1.25,
+                                                                  ),
+                                                                ),
+                                                              if (globals.carState == 1)
+                                                                const Text(
+                                                                  'Charged',
+                                                                  textAlign: TextAlign.center,
+                                                                  style: TextStyle(color: Color(0xFF00DF09), fontSize: 100, fontWeight: FontWeight.bold, height: 1.25),
+                                                                ),
+                                                            ],
+                                                          ]),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ),
+                                                ),
+                                              ]),
+                                            ),
+                                          ),
+                                        ),
+                                      );
+                                    },
+                                  );
+                                },
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              ],
+            )
+          ]),
+        ),
+      ),
+    );
+  }
+}
+
+// ---- Camera AI page
+class CameraPage extends StatefulWidget {
+  const CameraPage({
+    super.key,
+    required this.camera,
+  });
+
+  final CameraDescription camera;
+
+  @override
+  CameraPageState createState() => CameraPageState();
+}
+
+class CameraPageState extends State<CameraPage> {
+  late CameraController controller;
+  late Future<void> initializeControllerFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    // To display the current output from the Camera,
+    // create a CameraController.
+    controller = CameraController(
+      // Get a specific camera from the list of available cameras.
+      widget.camera,
+      // Define the resolution to use.
+      ResolutionPreset.max,
+      // Disable audio recording
+      enableAudio: false,
+      // Format of the images
+      imageFormatGroup: ImageFormatGroup.yuv420,
+    );
+
+    // Next, initialize the controller. This returns a Future.
+    initializeControllerFuture = controller.initialize();
+
+    // Load Tensorflow models
+    tfLoadModel('Android');
+  }
+
+  @override
+  void dispose() {
+    // Dispose app
+    super.dispose();
+    // Dispose of the controller when the widget is disposed.
+    controller.stopImageStream();
+    controller.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
     Size size = MediaQuery.of(context).size;
@@ -36,15 +496,13 @@ class InterfaceState extends State<Interface> {
           children: [
             TextButton(
                 onPressed: () {
-                  toggleCameraButton(widget.pController);
+                  toggleCameraButton(controller);
                   setState(() {});
                 },
-                child: recognitionsNotifier.value.isOdd
-                    ? const Text('Stop')
-                    : const Text('Start')),
+                child: recognitionsNotifier.value.isOdd ? const Text('Stop') : const Text('Start')),
             TextButton(
                 onPressed: () {
-                  focusButton(widget.pController);
+                  focusButton(controller);
                 },
                 child: const Text(
                   'Focus',
@@ -67,7 +525,7 @@ class InterfaceState extends State<Interface> {
         toolbarHeight: 40.0,
       ),
       body: FutureBuilder<void>(
-        future: widget.pInitializeControllerFuture,
+        future: initializeControllerFuture,
         builder: (context, snapshot) {
           return Stack(
             children: [
@@ -93,22 +551,15 @@ class InterfaceState extends State<Interface> {
                   // If the Future is complete, display the preview.
                   return Stack(children: [
                     Center(
-                      child: SizedBox(
-                          key: cameraPreviewWrapper,
-                          height: double.infinity,
-                          width: double.infinity,
-                          child: CameraPreview(widget.pController)),
+                      child: SizedBox(key: cameraPreviewWrapper, height: double.infinity, width: double.infinity, child: CameraPreview(controller)),
                     ),
                     ValueListenableBuilder(
                         valueListenable: recognitionsNotifier,
                         builder: (context, value, widget) {
-                          final keyContext =
-                              cameraPreviewWrapper.currentContext;
-                          final box =
-                              keyContext!.findRenderObject() as RenderBox;
+                          final keyContext = cameraPreviewWrapper.currentContext;
+                          final box = keyContext!.findRenderObject() as RenderBox;
                           if (value != 0) {
-                            final boxes = displayBoxesAroundRecognizedObjects(
-                                box.hasSize ? box.size : size);
+                            final boxes = displayBoxesAroundRecognizedObjects(box.hasSize ? box.size : size);
                             isProcessing = false;
                             return Stack(
                               children: boxes,
@@ -131,16 +582,15 @@ class InterfaceState extends State<Interface> {
   }
 }
 
+// ---- Pop up
 String errorToExplanation(error) {
   String explenation = error;
 
   if (error.contains("Connection timed out")) {
-    explenation =
-        "Failed to connect: check the network connection to your Tesla Mini";
+    explenation = "Failed to connect: check the network connection to your Tesla Mini";
   }
   if (error.contains("Network is unreachable")) {
-    explenation =
-        "No network connection found: try (re)connecting to the Tesla Mini";
+    explenation = "No network connection found: try (re)connecting to the Tesla Mini";
   }
 
   return explenation;
