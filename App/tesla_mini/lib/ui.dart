@@ -8,7 +8,7 @@ import 'package:tesla_mini/menubuttons.dart';
 import 'package:tesla_mini/tensorflow.dart';
 import 'package:tesla_mini/globals.dart' as globals;
 import 'package:tesla_mini/tcpserver.dart';
-import 'package:tesla_mini/httpserver.dart';
+import 'package:tesla_mini/carfunctions.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 
 // ---------- UI
@@ -49,7 +49,7 @@ class HomePageState extends State<HomePage> {
               children: [
                 Column(
                   children: [
-                    Container(
+                    SizedBox(
                       width: double.infinity,
                       child: Padding(
                         padding: const EdgeInsetsDirectional.only(top: 0, end: 32),
@@ -62,7 +62,7 @@ class HomePageState extends State<HomePage> {
                             )),
                       ),
                     ),
-                    Container(
+                    SizedBox(
                       width: double.infinity,
                       child: Padding(
                         padding: EdgeInsetsDirectional.only(start: 4, end: MediaQuery.of(context).size.width * 0.24),
@@ -93,7 +93,7 @@ class HomePageState extends State<HomePage> {
                     child: Column(
                       children: [
                         Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(24, 8, 0, 0),
+                          padding: const EdgeInsetsDirectional.fromSTEB(24, 4, 0, 0),
                           child: Row(
                             children: [
                               Flexible(
@@ -101,7 +101,12 @@ class HomePageState extends State<HomePage> {
                                   fit: BoxFit.scaleDown,
                                   child: Text(
                                     globals.carName,
-                                    style: TextStyle(fontSize: MediaQuery.of(context).size.width * 0.075, fontWeight: FontWeight.bold),
+                                    style: TextStyle(
+                                      fontSize: MediaQuery.of(context).size.width * 0.075,
+                                      fontWeight: FontWeight.bold,
+                                      height: 0,
+                                      color: const Color(0xFF3E3E3E),
+                                    ),
                                   ),
                                 ),
                               ),
@@ -113,10 +118,10 @@ class HomePageState extends State<HomePage> {
                                     icon: const FittedBox(
                                       fit: BoxFit.fitHeight,
                                       child: Opacity(
-                                        opacity: 0.6,
+                                        opacity: 0.3,
                                         child: Icon(
                                           Icons.edit_outlined,
-                                          color: Color(0xFF808080),
+                                          color: Color(0xFF3E3E3E),
                                           size: 100,
                                         ),
                                       ),
@@ -130,6 +135,10 @@ class HomePageState extends State<HomePage> {
                             ],
                           ),
                         ),
+                        const Divider(
+                          color: Color(0xFF808080),
+                          height: 0,
+                        ),
                         Padding(
                           padding: const EdgeInsetsDirectional.fromSTEB(16, 4, 16, 16),
                           child: Row(
@@ -138,11 +147,31 @@ class HomePageState extends State<HomePage> {
                                   valueListenable: globals.connectionStateNotifier,
                                   builder: (context, value, child) {
                                     return Expanded(
-                                      child: GestureDetector(
+                                        child: Column(children: [
+                                      const AspectRatio(
+                                        aspectRatio: 6 / 1,
+                                        child: Align(
+                                          alignment: AlignmentDirectional.center,
+                                          child: Padding(
+                                            padding: EdgeInsetsDirectional.only(top: 8, bottom: 2),
+                                            child: FittedBox(
+                                              fit: BoxFit.fitHeight,
+                                              child: Text(
+                                                'Connection:',
+                                                textAlign: TextAlign.center,
+                                                style: TextStyle(
+                                                  color: Color(0xFF808080),
+                                                  fontSize: 100,
+                                                  height: 1,
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                      ),
+                                      GestureDetector(
                                         onTap: () {
-                                          connectionStateNotifier.notifyListeners();
-                                          globals.connectionState += 1;
-                                          printMessage(globals.connectionState);
+                                          checkTCPServerStatus();
                                         },
                                         child: Container(
                                           decoration: BoxDecoration(
@@ -246,7 +275,12 @@ class HomePageState extends State<HomePage> {
                                                               const Text(
                                                                 'Connected',
                                                                 textAlign: TextAlign.center,
-                                                                style: TextStyle(color: Color(0xFF2060F2), fontSize: 100, fontWeight: FontWeight.bold, height: 1.25),
+                                                                style: TextStyle(
+                                                                  color: Color(0xFF2060F2),
+                                                                  fontSize: 100,
+                                                                  fontWeight: FontWeight.bold,
+                                                                  height: 1.25,
+                                                                ),
                                                               ),
                                                           ],
                                                         ),
@@ -259,21 +293,41 @@ class HomePageState extends State<HomePage> {
                                           ),
                                         ),
                                       ),
-                                    );
+                                    ]));
                                   }),
                               const VerticalDivider(width: 16),
                               ValueListenableBuilder(
                                 valueListenable: globals.connectionStateNotifier,
                                 builder: (context, value, child) {
                                   return ValueListenableBuilder(
-                                    valueListenable: globals.carStateNotifier,
+                                    valueListenable: globals.batteryStateNotifier,
                                     builder: (context, value, child) {
                                       return Expanded(
-                                        child: GestureDetector(
+                                          child: Column(children: [
+                                        const AspectRatio(
+                                          aspectRatio: 6 / 1,
+                                          child: Align(
+                                            alignment: AlignmentDirectional.center,
+                                            child: Padding(
+                                              padding: EdgeInsetsDirectional.only(top: 8, bottom: 2),
+                                              child: FittedBox(
+                                                fit: BoxFit.fitHeight,
+                                                child: Text(
+                                                  'Battery:',
+                                                  textAlign: TextAlign.center,
+                                                  style: TextStyle(
+                                                    color: Color(0xFF808080),
+                                                    fontSize: 100,
+                                                    height: 1,
+                                                  ),
+                                                ),
+                                              ),
+                                            ),
+                                          ),
+                                        ),
+                                        GestureDetector(
                                           onTap: () {
-                                            globals.carState += 1;
-                                            globals.carStateNotifier.value = !globals.carStateNotifier.value;
-                                            printMessage(globals.carState);
+                                            getSetBatteryState();
                                           },
                                           child: Container(
                                             decoration: BoxDecoration(
@@ -308,7 +362,7 @@ class HomePageState extends State<HomePage> {
                                                             ),
                                                           ),
                                                         ] else ...[
-                                                          if (globals.carState == -1)
+                                                          if (globals.batteryState == -1)
                                                             const Align(
                                                               alignment: AlignmentDirectional(0, 0),
                                                               child: FittedBox(
@@ -320,7 +374,7 @@ class HomePageState extends State<HomePage> {
                                                                 ),
                                                               ),
                                                             ),
-                                                          if (globals.carState == 0)
+                                                          if (globals.batteryState == 0)
                                                             const Align(
                                                               alignment: AlignmentDirectional(0, 0),
                                                               child: FittedBox(
@@ -332,7 +386,7 @@ class HomePageState extends State<HomePage> {
                                                                 ),
                                                               ),
                                                             ),
-                                                          if (globals.carState == 1)
+                                                          if (globals.batteryState == 1)
                                                             const Align(
                                                               alignment: AlignmentDirectional(0, 0),
                                                               child: FittedBox(
@@ -376,7 +430,7 @@ class HomePageState extends State<HomePage> {
                                                                 ),
                                                               ),
                                                             ] else ...[
-                                                              if (globals.carState == -1)
+                                                              if (globals.batteryState == -1)
                                                                 const Text(
                                                                   'Low battery',
                                                                   textAlign: TextAlign.center,
@@ -387,7 +441,7 @@ class HomePageState extends State<HomePage> {
                                                                     height: 1.25,
                                                                   ),
                                                                 ),
-                                                              if (globals.carState == 0)
+                                                              if (globals.batteryState == 0)
                                                                 const Text(
                                                                   'Charging',
                                                                   textAlign: TextAlign.center,
@@ -398,7 +452,7 @@ class HomePageState extends State<HomePage> {
                                                                     height: 1.25,
                                                                   ),
                                                                 ),
-                                                              if (globals.carState == 1)
+                                                              if (globals.batteryState == 1)
                                                                 const Text(
                                                                   'Charged',
                                                                   textAlign: TextAlign.center,
@@ -415,7 +469,7 @@ class HomePageState extends State<HomePage> {
                                             ),
                                           ),
                                         ),
-                                      );
+                                      ]));
                                     },
                                   );
                                 },

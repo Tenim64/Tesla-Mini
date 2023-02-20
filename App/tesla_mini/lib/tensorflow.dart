@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:tesla_mini/tcpserver.dart';
 import 'globals.dart' as globals;
 import 'package:tesla_mini/debugger.dart';
-import 'package:image/image.dart' as imageLib;
+import 'package:image/image.dart' as imagelib;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:tflite_flutter/tflite_flutter.dart' as tfl;
 import 'package:tflite_flutter_helper/tflite_flutter_helper.dart';
@@ -43,7 +43,7 @@ void tfLoadModel(modelName) async {
   }
 }
 
-Future<void> tfProcessFrame(imageLib.Image rawImage) async {
+Future<void> tfProcessFrame(imagelib.Image rawImage) async {
   printTitle("(2) Tensorflow processing");
 
   // ---- Interpreter Tensors
@@ -54,11 +54,7 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
   /// Pre-process the image
   TensorImage getProcessedImage(TensorImage inputImage) {
     int padSize = max(inputImage.height, inputImage.width);
-    ImageProcessor imageProcessor = ImageProcessorBuilder()
-        .add(ResizeWithCropOrPadOp(padSize, padSize))
-        .add(ResizeOp(
-            inputTensor.shape[1], inputTensor.shape[2], ResizeMethod.BILINEAR))
-        .build();
+    ImageProcessor imageProcessor = ImageProcessorBuilder().add(ResizeWithCropOrPadOp(padSize, padSize)).add(ResizeOp(inputTensor.shape[1], inputTensor.shape[2], ResizeMethod.BILINEAR)).build();
     inputImage = imageProcessor.process(inputImage);
     return inputImage;
   }
@@ -112,8 +108,7 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
   if (outputCount.getIntValue(0) > 0) {
     for (var i = 0; i < outputCount.getIntValue(0); i++) {
       if (outputScores.getDoubleValue(i) * 100 > detectionThreshold) {
-        sendDataTCP("recognition",
-            globals.labels.elementAt(outputClasses.getIntValue(i)));
+        sendDataTCP("recognition", globals.labels.elementAt(outputClasses.getIntValue(i)));
       }
     }
   }
@@ -124,8 +119,7 @@ Future<void> tfProcessFrame(imageLib.Image rawImage) async {
     printTitle("(4) Detected objects:");
     for (var i = 0; i < outputCount.getIntValue(0); i++) {
       if (outputScores.getDoubleValue(i) * 100 > detectionThreshold) {
-        printMessage(
-            "${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
+        printMessage("${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
       }
     }
   }
@@ -152,8 +146,7 @@ List<Widget> displayBoxesAroundRecognizedObjects(Size screen) {
     location["height"] = rawLocations[i + 3];
     locations.add(location);
     if (i == 0) {
-      printMessage(
-          "location at: (${location["x"]}, ${location["y"]}) width:${location["width"]}, height:${location["height"]}");
+      printMessage("location at: (${location["x"]}, ${location["y"]}) width:${location["width"]}, height:${location["height"]}");
     }
   }
   printMessage("(5.2) Locations ready");

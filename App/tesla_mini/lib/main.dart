@@ -3,7 +3,7 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:tesla_mini/tensorflow.dart';
+import 'package:tesla_mini/globals.dart' as globals;
 import 'package:tesla_mini/ui.dart';
 import 'package:wakelock/wakelock.dart';
 import 'package:tesla_mini/debugger.dart';
@@ -28,7 +28,7 @@ Future<void> main() async {
   final cameras = await availableCameras();
 
   // Get a specific camera from the list of available cameras.
-  final firstCamera = cameras.first;
+  globals.mainCamera = cameras.first;
 
   // App
   runApp(
@@ -47,8 +47,7 @@ Future<void> main() async {
               ),
             ),
           ),
-          cupertinoOverrideTheme:
-              const CupertinoThemeData(brightness: Brightness.light)),
+          cupertinoOverrideTheme: const CupertinoThemeData(brightness: Brightness.light)),
       home: const HomePage(),
     ),
   );

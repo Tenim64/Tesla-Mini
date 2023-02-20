@@ -1,12 +1,12 @@
-// ignore_for_file: prefer_typing_uninitialized_variables, invalid_use_of_protected_member
+// ignore_for_file: prefer_typing_uninitialized_variables, invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
 
 // Packages
 library tesla_mini.globals;
 
-import 'dart:ffi';
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:tesla_mini/debugger.dart';
+
+var mainCamera;
 
 // Tflite
 Map<String, Object> recognitions = {};
@@ -26,6 +26,7 @@ Future<void> updateRecognitions(var inputRecognitions) async {
 }
 
 // Socket
+bool isTCPServerActive = false;
 const tcpIpAddress = '192.168.4.1';
 const tcpPort = 80;
 
@@ -65,10 +66,10 @@ void closeDialog(context) {
 }
 
 final connectionStateNotifier = ValueNotifier<bool>(false);
-final carStateNotifier = ValueNotifier<bool>(false);
+final batteryStateNotifier = ValueNotifier<bool>(false);
 // -1 = disconnected | 0 = connecting/unknown | 1 = connected
 int connectionState = -1;
 // -1 = low battery | 0 = low charging | 1 = charged
-int carState = -1;
+int batteryState = 1;
 
 String carName = "Tesla Mini";
