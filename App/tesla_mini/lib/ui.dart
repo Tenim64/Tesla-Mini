@@ -1,3 +1,4 @@
+// ignore_for_file: non_constant_identifier_names
 // ---------- Packages
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -10,6 +11,7 @@ import 'package:tesla_mini/globals.dart' as globals;
 import 'package:tesla_mini/tcpserver.dart';
 import 'package:tesla_mini/carfunctions.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'dart:math' as math;
 
 // ---------- Extra
 final List<Widget> pages = [const HomePage(), const ControllerPage()];
@@ -29,8 +31,66 @@ String welcomeText() {
   return "Good evening!";
 }
 
-Widget Joystick(int direction) {
-  return Container();
+class Joystick extends StatefulWidget {
+  final ValueChanged<double> onChanged;
+  final BuildContext context;
+  final double angle;
+
+  const Joystick({
+    super.key,
+    required this.onChanged,
+    required this.context,
+    required this.angle,
+  });
+
+  @override
+  JoystickState createState() => JoystickState();
+}
+
+class JoystickState extends State<Joystick> {
+  double sliderValue = 0;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Padding(
+        padding: EdgeInsetsDirectional.all(MediaQuery.of(context).size.aspectRatio * 50),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFC8C8C8),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: const Color(0xFFBCBCBC),
+              width: MediaQuery.of(context).size.aspectRatio * 20,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.all(12),
+            child: Transform.rotate(
+              angle: math.pi * 2 / 360 * widget.angle,
+              child: Slider(
+                min: -100,
+                max: 100,
+                value: sliderValue,
+                divisions: 200,
+                onChanged: (newValue) {
+                  setState(() {
+                    sliderValue = newValue;
+                  });
+                  widget.onChanged(newValue);
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ---------- Pages
@@ -526,17 +586,51 @@ class ControllerPageState extends State<ControllerPage> {
                       ),
                       child: Stack(children: [
                         Column(
-                          children: [Joystick(1), Joystick(0)],
+                          children: [
+                            Joystick(
+                              onChanged: (newValue) {
+                                sendDataTCP("control", "drive=$newValue");
+                              },
+                              context: context,
+                              angle: 90,
+                            ),
+                            Joystick(
+                              onChanged: (newValue) {
+                                sendDataTCP("control", "turn=$newValue");
+                              },
+                              context: context,
+                              angle: 0,
+                            ),
+                          ],
                         ),
                         Positioned(
-                          right: 0,
+                          right: MediaQuery.of(context).size.aspectRatio * 20,
+                          top: 0,
+                          bottom: 0,
                           child: Container(
                             decoration: const BoxDecoration(
                               color: Color(0xFFF2F2F2),
                               shape: BoxShape.circle,
                             ),
-                            width: 20,
-                            height: 20,
+                            width: MediaQuery.of(context).size.aspectRatio * 150,
+                            height: MediaQuery.of(context).size.aspectRatio * 150,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.open_in_full,
+                                size: MediaQuery.of(context).size.aspectRatio * 100,
+                                color: const Color(0xFFCC0000),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    PageRouteBuilder(
+                                      //pageBuilder: (context, animation, secondaryAnimation) => FullControllerPage(),
+                                      pageBuilder: (context, animation, secondaryAnimation) => pages.elementAt(1),
+                                      transitionDuration: const Duration(milliseconds: 180),
+                                      transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
+                                    ));
+                              },
+                            ),
                           ),
                         )
                       ])),

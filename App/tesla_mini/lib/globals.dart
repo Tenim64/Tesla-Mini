@@ -5,7 +5,6 @@ library tesla_mini.globals;
 
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:tesla_mini/debugger.dart';
 
 var mainCamera;
 int currentPageIndex = 0;
