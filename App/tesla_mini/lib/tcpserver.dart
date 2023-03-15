@@ -29,6 +29,7 @@ Future<bool> checkTCPServerStatus() async {
       await globals.socketTCP?.close();
     }
     await globals.connectSocket();
+    globals.socketTCP?.write(packageMaker("get", "connection"));
     globals.isTCPServerActive = true;
   } catch (e) {
     if (!e.toString().contains("errno = 104")) {
