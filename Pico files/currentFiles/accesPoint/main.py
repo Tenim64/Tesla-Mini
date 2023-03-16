@@ -30,6 +30,10 @@ sConn = None
 uart = None
 led = Pin("LED", Pin.OUT)
 production = False
+# Low battery pin
+lowbatteryPin = Pin(21, Pin.IN, Pin.PULL_UP)
+# Charging pin
+chargingPin = Pin(19, Pin.IN, Pin.PULL_UP)
 
 
 # ---------- Debug tools ----------
@@ -70,7 +74,6 @@ def main():
             try:
                 # Receive data from the socket
                 receiveSocketData()
-                # Receive data from the socket
                 closeSocket()
             except Exception as e:
                 print(e)
@@ -109,11 +112,27 @@ def sendSerial(data):
 
 # -------------------------------- Network --------------------------------
 # ---------- Functions ----------
+def processGetRequest(data):
+    global sConn, lowbatteryPin, chargingPin
+
+    response = ""
+
+    if data_title == "battery":
+        lowbattery = not lowbatteryPin.value()
+        charging = chargingPin.value()
+
+        if lowbattery:
+            response = "low"
+            if charging:
+                response = "charging"
+        if lowbatteryPin.value():
+            response = "charged"
+
+    sConn.send(response.encode())    
+
 def processData(data):
     blink(1)
     print("Data received!")
-
-    global sConn
 
     # Get data from json
     data_object = json.loads(data)
@@ -121,13 +140,16 @@ def processData(data):
     data_data = data_object["data"]
     
     # If no data was found, return
-    if data_title != None:
-        # Send to data to RPI Pico
-        print(f"{data_title} - {data_data}")
-        sendSerial(f"{data_title}\\-\\{data_data}")
+    if data_title == None:
+        return
+    # If no data was found, return
+    if data_title == "get":
+        processGetRequest(data_data)
+        return
 
-    # Close connection
-    sConn.close() 
+    # Send to data to RPI Pico
+    print(f"{data_title} - {data_data}")
+    sendSerial(f"{data_title}\\-\\{data_data}")
 
 
 # ---------- Setup network ----------
@@ -205,6 +227,8 @@ def receiveSocketData():
             continue
         if data != None:
             processData(data)
+            # Close connection
+            sConn.close() 
 
         data = None
         

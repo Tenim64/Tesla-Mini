@@ -65,6 +65,7 @@ def processData(data):
                 servo_SetPosition(servo_currentPosition_Percentage * -1 + 100)
             if (data_data == "Starting" or data_data == "Stopping"):
                 servo_SetPosition(servo_currentPosition_Percentage)
+                motor_Brake()
 
         if (data_title == "control"):
             if (data_data == "forwards"):
