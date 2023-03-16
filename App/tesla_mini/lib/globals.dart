@@ -7,6 +7,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 
 var mainCamera;
+int currentPageIndex = 0;
 
 // Tflite
 Map<String, Object> recognitions = {};

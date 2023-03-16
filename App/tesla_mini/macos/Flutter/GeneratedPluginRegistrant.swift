@@ -8,7 +8,7 @@ import Foundation
 import firebase_core
 import firebase_ml_model_downloader
 import network_info_plus
-import path_provider_macos
+import path_provider_foundation
 import tflite_flutter_helper
 import wakelock_macos
 

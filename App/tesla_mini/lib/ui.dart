@@ -1,3 +1,4 @@
+// ignore_for_file: non_constant_identifier_names
 // ---------- Packages
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -10,8 +11,12 @@ import 'package:tesla_mini/globals.dart' as globals;
 import 'package:tesla_mini/tcpserver.dart';
 import 'package:tesla_mini/carfunctions.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'dart:math' as math;
 
-// ---------- UI
+// ---------- Extra
+final List<Widget> pages = [const HomePage(), const ControllerPage()];
+
+// ---------- Widgets
 String welcomeText() {
   final currentHour = DateTime.now().hour;
   if (currentHour < 6) {
@@ -26,6 +31,69 @@ String welcomeText() {
   return "Good evening!";
 }
 
+class Joystick extends StatefulWidget {
+  final ValueChanged<double> onChanged;
+  final BuildContext context;
+  final double angle;
+
+  const Joystick({
+    super.key,
+    required this.onChanged,
+    required this.context,
+    required this.angle,
+  });
+
+  @override
+  JoystickState createState() => JoystickState();
+}
+
+class JoystickState extends State<Joystick> {
+  double sliderValue = 0;
+
+  @override
+  void initState() {
+    super.initState();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Expanded(
+      child: Padding(
+        padding: EdgeInsetsDirectional.all(MediaQuery.of(context).size.aspectRatio * 50),
+        child: Container(
+          decoration: BoxDecoration(
+            color: const Color(0xFFC8C8C8),
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: const Color(0xFFBCBCBC),
+              width: MediaQuery.of(context).size.aspectRatio * 20,
+            ),
+          ),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.all(12),
+            child: Transform.rotate(
+              angle: math.pi * 2 / 360 * widget.angle,
+              child: Slider(
+                min: -100,
+                max: 100,
+                value: sliderValue,
+                divisions: 200,
+                onChanged: (newValue) {
+                  setState(() {
+                    sliderValue = newValue;
+                  });
+                  widget.onChanged(newValue);
+                },
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ---------- Pages
 // ---- Home page
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -42,448 +110,535 @@ class HomePageState extends State<HomePage> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 242, 242, 242),
       body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsetsDirectional.all(24),
-          child: Column(children: [
-            Stack(
-              children: [
-                Column(
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(24, 24, 24, 108),
+              child: Column(children: [
+                Stack(
                   children: [
-                    SizedBox(
-                      width: double.infinity,
-                      child: Padding(
-                        padding: const EdgeInsetsDirectional.only(top: 0, end: 32),
-                        child: FittedBox(
-                            fit: BoxFit.fitWidth,
-                            child: Text(
-                              welcomeText(),
-                              textAlign: TextAlign.start,
-                              style: const TextStyle(fontSize: 100, fontWeight: FontWeight.bold),
-                            )),
-                      ),
+                    Column(
+                      children: [
+                        SizedBox(
+                          width: double.infinity,
+                          child: Padding(
+                            padding: const EdgeInsetsDirectional.only(top: 0, end: 32),
+                            child: FittedBox(
+                                fit: BoxFit.fitWidth,
+                                child: Text(
+                                  welcomeText(),
+                                  textAlign: TextAlign.start,
+                                  style: const TextStyle(fontSize: 100, fontWeight: FontWeight.bold),
+                                )),
+                          ),
+                        ),
+                        SizedBox(
+                          width: double.infinity,
+                          child: Padding(
+                            padding: EdgeInsetsDirectional.only(start: 4, end: MediaQuery.of(context).size.width * 0.24),
+                            child: const FittedBox(
+                                fit: BoxFit.fitWidth,
+                                child: Text(
+                                  "Your Tesla Mini is waiting for you",
+                                  textAlign: TextAlign.start,
+                                  style: TextStyle(fontSize: 100),
+                                )),
+                          ),
+                        )
+                      ],
                     ),
-                    SizedBox(
-                      width: double.infinity,
-                      child: Padding(
-                        padding: EdgeInsetsDirectional.only(start: 4, end: MediaQuery.of(context).size.width * 0.24),
-                        child: const FittedBox(
-                            fit: BoxFit.fitWidth,
-                            child: Text(
-                              "Your Tesla Mini is waiting for you",
-                              textAlign: TextAlign.start,
-                              style: TextStyle(fontSize: 100),
-                            )),
-                      ),
-                    )
                   ],
                 ),
-              ],
-            ),
-            Stack(
-              children: [
-                Padding(
-                  padding: const EdgeInsetsDirectional.only(top: 24),
-                  child: Container(
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color.fromARGB(255, 226, 226, 226),
-                      borderRadius: BorderRadius.circular(24),
-                      shape: BoxShape.rectangle,
-                    ),
-                    child: Column(
-                      children: [
-                        Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(24, 4, 0, 0),
-                          child: Row(
+                Stack(children: [
+                  Padding(
+                      padding: const EdgeInsetsDirectional.only(top: 24),
+                      child: Container(
+                          width: double.infinity,
+                          decoration: BoxDecoration(
+                            color: const Color.fromARGB(255, 226, 226, 226),
+                            borderRadius: BorderRadius.circular(24),
+                            shape: BoxShape.rectangle,
+                          ),
+                          child: Column(
                             children: [
-                              Flexible(
-                                child: FittedBox(
-                                  fit: BoxFit.scaleDown,
-                                  child: Text(
-                                    globals.carName,
-                                    style: TextStyle(
-                                      fontSize: MediaQuery.of(context).size.width * 0.075,
-                                      fontWeight: FontWeight.bold,
-                                      height: 0,
-                                      color: const Color(0xFF3E3E3E),
-                                    ),
-                                  ),
-                                ),
-                              ),
                               Padding(
-                                padding: const EdgeInsetsDirectional.only(bottom: 4),
-                                child: FittedBox(
-                                  fit: BoxFit.fitHeight,
-                                  child: IconButton(
-                                    icon: const FittedBox(
-                                      fit: BoxFit.fitHeight,
-                                      child: Opacity(
-                                        opacity: 0.3,
-                                        child: Icon(
-                                          Icons.edit_outlined,
-                                          color: Color(0xFF3E3E3E),
-                                          size: 100,
+                                padding: const EdgeInsetsDirectional.fromSTEB(24, 4, 0, 0),
+                                child: Row(
+                                  children: [
+                                    Flexible(
+                                      child: FittedBox(
+                                        fit: BoxFit.scaleDown,
+                                        child: Text(
+                                          globals.carName,
+                                          style: TextStyle(
+                                            fontSize: MediaQuery.of(context).size.width * 0.075,
+                                            fontWeight: FontWeight.bold,
+                                            height: 0,
+                                            color: const Color(0xFF3E3E3E),
+                                          ),
                                         ),
                                       ),
                                     ),
-                                    onPressed: () {
-                                      printMessage("*Edit name*");
-                                    },
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const Divider(
-                          color: Color(0xFF808080),
-                          height: 0,
-                        ),
-                        Padding(
-                          padding: const EdgeInsetsDirectional.fromSTEB(16, 4, 16, 16),
-                          child: Row(
-                            children: [
-                              ValueListenableBuilder(
-                                  valueListenable: globals.connectionStateNotifier,
-                                  builder: (context, value, child) {
-                                    return Expanded(
-                                        child: Column(children: [
-                                      const AspectRatio(
-                                        aspectRatio: 6 / 1,
-                                        child: Align(
-                                          alignment: AlignmentDirectional.center,
-                                          child: Padding(
-                                            padding: EdgeInsetsDirectional.only(top: 8, bottom: 2),
-                                            child: FittedBox(
-                                              fit: BoxFit.fitHeight,
-                                              child: Text(
-                                                'Connection:',
-                                                textAlign: TextAlign.center,
-                                                style: TextStyle(
-                                                  color: Color(0xFF808080),
-                                                  fontSize: 100,
-                                                  height: 1,
-                                                ),
+                                    Padding(
+                                      padding: const EdgeInsetsDirectional.only(bottom: 4),
+                                      child: FittedBox(
+                                        fit: BoxFit.fitHeight,
+                                        child: IconButton(
+                                          icon: const FittedBox(
+                                            fit: BoxFit.fitHeight,
+                                            child: Opacity(
+                                              opacity: 0.3,
+                                              child: Icon(
+                                                Icons.edit_outlined,
+                                                color: Color(0xFF3E3E3E),
+                                                size: 100,
                                               ),
                                             ),
                                           ),
+                                          onPressed: () {
+                                            printMessage("*Edit name*");
+                                          },
                                         ),
                                       ),
-                                      GestureDetector(
-                                        onTap: () {
-                                          checkTCPServerStatus();
-                                        },
-                                        child: Container(
-                                          decoration: BoxDecoration(
-                                            borderRadius: BorderRadius.circular(24),
-                                            shape: BoxShape.rectangle,
-                                            color: const Color.fromARGB(255, 200, 200, 200),
-                                          ),
-                                          child: Padding(
-                                            padding: const EdgeInsetsDirectional.all(12),
-                                            child: Column(children: [
-                                              AspectRatio(
-                                                aspectRatio: 1 / 1,
-                                                child: Container(
-                                                  decoration: BoxDecoration(
-                                                    borderRadius: BorderRadius.circular(20),
-                                                    shape: BoxShape.rectangle,
-                                                    color: const Color.fromARGB(255, 242, 242, 242),
-                                                  ),
-                                                  child: Padding(
-                                                    padding: const EdgeInsetsDirectional.all(20),
-                                                    child: Stack(children: [
-                                                      if (globals.connectionState == -1)
-                                                        const Align(
-                                                          alignment: AlignmentDirectional(0, 0),
-                                                          child: FittedBox(
-                                                            fit: BoxFit.fill,
-                                                            child: FaIcon(
-                                                              FontAwesomeIcons.xmark,
-                                                              color: Color(0xFFE30000),
-                                                              size: 500,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      if (globals.connectionState == 0)
-                                                        const Align(
-                                                          alignment: AlignmentDirectional(0, 0),
-                                                          child: FittedBox(
-                                                            fit: BoxFit.fill,
-                                                            child: FaIcon(
-                                                              FontAwesomeIcons.wifi,
-                                                              color: Color(0xFFFFB800),
-                                                              size: 500,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                      if (globals.connectionState == 1)
-                                                        const Align(
-                                                          alignment: AlignmentDirectional(0, 0),
-                                                          child: FittedBox(
-                                                            fit: BoxFit.fill,
-                                                            child: FaIcon(
-                                                              FontAwesomeIcons.check,
-                                                              color: Color(0xFF2060F2),
-                                                              size: 500,
-                                                            ),
-                                                          ),
-                                                        ),
-                                                    ]),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const Divider(
+                                color: Color(0xFF808080),
+                                height: 0,
+                              ),
+                              Padding(
+                                padding: const EdgeInsetsDirectional.fromSTEB(16, 4, 16, 16),
+                                child: Row(
+                                  children: [
+                                    ValueListenableBuilder(
+                                        valueListenable: globals.connectionStateNotifier,
+                                        builder: (context, value, child) {
+                                          return Expanded(
+                                              child: Column(children: [
+                                            const AspectRatio(
+                                              aspectRatio: 6 / 1,
+                                              child: Align(
+                                                alignment: AlignmentDirectional.center,
+                                                child: Padding(
+                                                  padding: EdgeInsetsDirectional.only(top: 8, bottom: 2),
+                                                  child: FittedBox(
+                                                    fit: BoxFit.fitHeight,
+                                                    child: Text(
+                                                      'Connection:',
+                                                      textAlign: TextAlign.center,
+                                                      style: TextStyle(
+                                                        color: Color(0xFF808080),
+                                                        fontSize: 100,
+                                                        height: 1,
+                                                      ),
+                                                    ),
                                                   ),
                                                 ),
                                               ),
-                                              Padding(
-                                                padding: const EdgeInsetsDirectional.only(top: 8),
-                                                child: AspectRatio(
-                                                  aspectRatio: 16 / 5,
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      borderRadius: BorderRadius.circular(20),
-                                                      shape: BoxShape.rectangle,
-                                                      color: const Color.fromARGB(255, 242, 242, 242),
-                                                    ),
-                                                    child: Padding(
-                                                      padding: const EdgeInsetsDirectional.fromSTEB(16, 7, 16, 7),
-                                                      child: FittedBox(
-                                                        fit: BoxFit.scaleDown,
-                                                        child: Stack(
-                                                          children: [
+                                            ),
+                                            GestureDetector(
+                                              onTap: () {
+                                                checkTCPServerStatus();
+                                              },
+                                              child: Container(
+                                                decoration: BoxDecoration(
+                                                  borderRadius: BorderRadius.circular(24),
+                                                  shape: BoxShape.rectangle,
+                                                  color: const Color.fromARGB(255, 200, 200, 200),
+                                                ),
+                                                child: Padding(
+                                                  padding: const EdgeInsetsDirectional.all(12),
+                                                  child: Column(children: [
+                                                    AspectRatio(
+                                                      aspectRatio: 1 / 1,
+                                                      child: Container(
+                                                        decoration: BoxDecoration(
+                                                          borderRadius: BorderRadius.circular(20),
+                                                          shape: BoxShape.rectangle,
+                                                          color: const Color.fromARGB(255, 242, 242, 242),
+                                                        ),
+                                                        child: Padding(
+                                                          padding: const EdgeInsetsDirectional.all(20),
+                                                          child: Stack(children: [
                                                             if (globals.connectionState == -1)
-                                                              const Text(
-                                                                'Disconnected',
-                                                                textAlign: TextAlign.center,
-                                                                style: TextStyle(
-                                                                  color: Color(0xFFE30000),
-                                                                  fontSize: 100,
-                                                                  fontWeight: FontWeight.bold,
-                                                                  height: 1.25,
+                                                              const Align(
+                                                                alignment: AlignmentDirectional(0, 0),
+                                                                child: FittedBox(
+                                                                  fit: BoxFit.fill,
+                                                                  child: FaIcon(
+                                                                    FontAwesomeIcons.xmark,
+                                                                    color: Color(0xFFE30000),
+                                                                    size: 500,
+                                                                  ),
                                                                 ),
                                                               ),
                                                             if (globals.connectionState == 0)
-                                                              const Text(
-                                                                'Connecting',
-                                                                textAlign: TextAlign.center,
-                                                                style: TextStyle(
-                                                                  color: Color(0xFFFFB800),
-                                                                  fontSize: 100,
-                                                                  fontWeight: FontWeight.bold,
-                                                                  height: 1.25,
+                                                              const Align(
+                                                                alignment: AlignmentDirectional(0, 0),
+                                                                child: FittedBox(
+                                                                  fit: BoxFit.fill,
+                                                                  child: FaIcon(
+                                                                    FontAwesomeIcons.wifi,
+                                                                    color: Color(0xFFFFB800),
+                                                                    size: 500,
+                                                                  ),
                                                                 ),
                                                               ),
                                                             if (globals.connectionState == 1)
-                                                              const Text(
-                                                                'Connected',
-                                                                textAlign: TextAlign.center,
-                                                                style: TextStyle(
-                                                                  color: Color(0xFF2060F2),
-                                                                  fontSize: 100,
-                                                                  fontWeight: FontWeight.bold,
-                                                                  height: 1.25,
-                                                                ),
-                                                              ),
-                                                          ],
-                                                        ),
-                                                      ),
-                                                    ),
-                                                  ),
-                                                ),
-                                              ),
-                                            ]),
-                                          ),
-                                        ),
-                                      ),
-                                    ]));
-                                  }),
-                              const VerticalDivider(width: 16),
-                              ValueListenableBuilder(
-                                valueListenable: globals.connectionStateNotifier,
-                                builder: (context, value, child) {
-                                  return ValueListenableBuilder(
-                                    valueListenable: globals.batteryStateNotifier,
-                                    builder: (context, value, child) {
-                                      return Expanded(
-                                          child: Column(children: [
-                                        const AspectRatio(
-                                          aspectRatio: 6 / 1,
-                                          child: Align(
-                                            alignment: AlignmentDirectional.center,
-                                            child: Padding(
-                                              padding: EdgeInsetsDirectional.only(top: 8, bottom: 2),
-                                              child: FittedBox(
-                                                fit: BoxFit.fitHeight,
-                                                child: Text(
-                                                  'Battery:',
-                                                  textAlign: TextAlign.center,
-                                                  style: TextStyle(
-                                                    color: Color(0xFF808080),
-                                                    fontSize: 100,
-                                                    height: 1,
-                                                  ),
-                                                ),
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                        GestureDetector(
-                                          onTap: () {
-                                            getSetBatteryState();
-                                          },
-                                          child: Container(
-                                            decoration: BoxDecoration(
-                                              borderRadius: BorderRadius.circular(24),
-                                              shape: BoxShape.rectangle,
-                                              color: const Color.fromARGB(255, 200, 200, 200),
-                                            ),
-                                            child: Padding(
-                                              padding: const EdgeInsetsDirectional.all(12),
-                                              child: Column(children: [
-                                                AspectRatio(
-                                                  aspectRatio: 1 / 1,
-                                                  child: Container(
-                                                    decoration: BoxDecoration(
-                                                      borderRadius: BorderRadius.circular(20),
-                                                      shape: BoxShape.rectangle,
-                                                      color: const Color.fromARGB(255, 242, 242, 242),
-                                                    ),
-                                                    child: Padding(
-                                                      padding: const EdgeInsetsDirectional.all(20),
-                                                      child: Stack(children: [
-                                                        if (globals.connectionState == -1 || globals.connectionState == 0) ...[
-                                                          const Align(
-                                                            alignment: AlignmentDirectional(0, 0),
-                                                            child: FittedBox(
-                                                              fit: BoxFit.fill,
-                                                              child: FaIcon(
-                                                                FontAwesomeIcons.xmark,
-                                                                color: Color(0xFFE30000),
-                                                                size: 500,
-                                                              ),
-                                                            ),
-                                                          ),
-                                                        ] else ...[
-                                                          if (globals.batteryState == -1)
-                                                            const Align(
-                                                              alignment: AlignmentDirectional(0, 0),
-                                                              child: FittedBox(
-                                                                fit: BoxFit.fill,
-                                                                child: FaIcon(
-                                                                  FontAwesomeIcons.batteryEmpty,
-                                                                  color: Color(0xFFE35200),
-                                                                  size: 500,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          if (globals.batteryState == 0)
-                                                            const Align(
-                                                              alignment: AlignmentDirectional(0, 0),
-                                                              child: FittedBox(
-                                                                fit: BoxFit.fill,
-                                                                child: FaIcon(
-                                                                  FontAwesomeIcons.bolt,
-                                                                  color: Color(0xFFDFBB00),
-                                                                  size: 500,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                          if (globals.batteryState == 1)
-                                                            const Align(
-                                                              alignment: AlignmentDirectional(0, 0),
-                                                              child: FittedBox(
-                                                                fit: BoxFit.fill,
-                                                                child: FaIcon(
-                                                                  FontAwesomeIcons.batteryFull,
-                                                                  color: Color(0xFF00DF09),
-                                                                  size: 500,
-                                                                ),
-                                                              ),
-                                                            ),
-                                                        ]
-                                                      ]),
-                                                    ),
-                                                  ),
-                                                ),
-                                                Padding(
-                                                  padding: const EdgeInsetsDirectional.only(top: 8),
-                                                  child: AspectRatio(
-                                                    aspectRatio: 16 / 5,
-                                                    child: Container(
-                                                      decoration: BoxDecoration(
-                                                        borderRadius: BorderRadius.circular(20),
-                                                        shape: BoxShape.rectangle,
-                                                        color: const Color.fromARGB(255, 242, 242, 242),
-                                                      ),
-                                                      child: Padding(
-                                                        padding: const EdgeInsetsDirectional.fromSTEB(16, 7, 16, 7),
-                                                        child: FittedBox(
-                                                          fit: BoxFit.scaleDown,
-                                                          child: Stack(children: [
-                                                            if (globals.connectionState == -1 || globals.connectionState == 0) ...[
-                                                              const Text(
-                                                                'Disconnected',
-                                                                textAlign: TextAlign.center,
-                                                                style: TextStyle(
-                                                                  color: Color(0xFFE30000),
-                                                                  fontSize: 100,
-                                                                  fontWeight: FontWeight.bold,
-                                                                  height: 1.25,
-                                                                ),
-                                                              ),
-                                                            ] else ...[
-                                                              if (globals.batteryState == -1)
-                                                                const Text(
-                                                                  'Low battery',
-                                                                  textAlign: TextAlign.center,
-                                                                  style: TextStyle(
-                                                                    color: Color(0xFFE35200),
-                                                                    fontSize: 100,
-                                                                    fontWeight: FontWeight.bold,
-                                                                    height: 1.25,
+                                                              const Align(
+                                                                alignment: AlignmentDirectional(0, 0),
+                                                                child: FittedBox(
+                                                                  fit: BoxFit.fill,
+                                                                  child: FaIcon(
+                                                                    FontAwesomeIcons.check,
+                                                                    color: Color(0xFF2060F2),
+                                                                    size: 500,
                                                                   ),
                                                                 ),
-                                                              if (globals.batteryState == 0)
-                                                                const Text(
-                                                                  'Charging',
-                                                                  textAlign: TextAlign.center,
-                                                                  style: TextStyle(
-                                                                    color: Color(0xFFDFBB00),
-                                                                    fontSize: 100,
-                                                                    fontWeight: FontWeight.bold,
-                                                                    height: 1.25,
-                                                                  ),
-                                                                ),
-                                                              if (globals.batteryState == 1)
-                                                                const Text(
-                                                                  'Charged',
-                                                                  textAlign: TextAlign.center,
-                                                                  style: TextStyle(color: Color(0xFF00DF09), fontSize: 100, fontWeight: FontWeight.bold, height: 1.25),
-                                                                ),
-                                                            ],
+                                                              ),
                                                           ]),
                                                         ),
                                                       ),
                                                     ),
+                                                    Padding(
+                                                      padding: const EdgeInsetsDirectional.only(top: 8),
+                                                      child: AspectRatio(
+                                                        aspectRatio: 16 / 5,
+                                                        child: Container(
+                                                          decoration: BoxDecoration(
+                                                            borderRadius: BorderRadius.circular(20),
+                                                            shape: BoxShape.rectangle,
+                                                            color: const Color.fromARGB(255, 242, 242, 242),
+                                                          ),
+                                                          child: Padding(
+                                                            padding: const EdgeInsetsDirectional.fromSTEB(16, 7, 16, 7),
+                                                            child: FittedBox(
+                                                              fit: BoxFit.scaleDown,
+                                                              child: Stack(
+                                                                children: [
+                                                                  if (globals.connectionState == -1)
+                                                                    const Text(
+                                                                      'Disconnected',
+                                                                      textAlign: TextAlign.center,
+                                                                      style: TextStyle(
+                                                                        color: Color(0xFFE30000),
+                                                                        fontSize: 100,
+                                                                        fontWeight: FontWeight.bold,
+                                                                        height: 1.25,
+                                                                      ),
+                                                                    ),
+                                                                  if (globals.connectionState == 0)
+                                                                    const Text(
+                                                                      'Connecting',
+                                                                      textAlign: TextAlign.center,
+                                                                      style: TextStyle(
+                                                                        color: Color(0xFFFFB800),
+                                                                        fontSize: 100,
+                                                                        fontWeight: FontWeight.bold,
+                                                                        height: 1.25,
+                                                                      ),
+                                                                    ),
+                                                                  if (globals.connectionState == 1)
+                                                                    const Text(
+                                                                      'Connected',
+                                                                      textAlign: TextAlign.center,
+                                                                      style: TextStyle(
+                                                                        color: Color(0xFF2060F2),
+                                                                        fontSize: 100,
+                                                                        fontWeight: FontWeight.bold,
+                                                                        height: 1.25,
+                                                                      ),
+                                                                    ),
+                                                                ],
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ),
+                                                  ]),
+                                                ),
+                                              ),
+                                            ),
+                                          ]));
+                                        }),
+                                    const VerticalDivider(width: 16),
+                                    ValueListenableBuilder(
+                                      valueListenable: globals.connectionStateNotifier,
+                                      builder: (context, value, child) {
+                                        return ValueListenableBuilder(
+                                          valueListenable: globals.batteryStateNotifier,
+                                          builder: (context, value, child) {
+                                            return Expanded(
+                                                child: Column(children: [
+                                              const AspectRatio(
+                                                aspectRatio: 6 / 1,
+                                                child: Align(
+                                                  alignment: AlignmentDirectional.center,
+                                                  child: Padding(
+                                                    padding: EdgeInsetsDirectional.only(top: 8, bottom: 2),
+                                                    child: FittedBox(
+                                                      fit: BoxFit.fitHeight,
+                                                      child: Text(
+                                                        'Battery:',
+                                                        textAlign: TextAlign.center,
+                                                        style: TextStyle(
+                                                          color: Color(0xFF808080),
+                                                          fontSize: 100,
+                                                          height: 1,
+                                                        ),
+                                                      ),
+                                                    ),
                                                   ),
                                                 ),
-                                              ]),
-                                            ),
-                                          ),
-                                        ),
-                                      ]));
-                                    },
-                                  );
-                                },
-                              ),
+                                              ),
+                                              GestureDetector(
+                                                onTap: () {
+                                                  getSetBatteryState();
+                                                },
+                                                child: Container(
+                                                  decoration: BoxDecoration(
+                                                    borderRadius: BorderRadius.circular(24),
+                                                    shape: BoxShape.rectangle,
+                                                    color: const Color.fromARGB(255, 200, 200, 200),
+                                                  ),
+                                                  child: Padding(
+                                                    padding: const EdgeInsetsDirectional.all(12),
+                                                    child: Column(children: [
+                                                      AspectRatio(
+                                                        aspectRatio: 1 / 1,
+                                                        child: Container(
+                                                          decoration: BoxDecoration(
+                                                            borderRadius: BorderRadius.circular(20),
+                                                            shape: BoxShape.rectangle,
+                                                            color: const Color(0xFFF2F2F2),
+                                                          ),
+                                                          child: Padding(
+                                                            padding: const EdgeInsetsDirectional.all(20),
+                                                            child: Stack(children: [
+                                                              if (globals.connectionState == -1 || globals.connectionState == 0) ...[
+                                                                const Align(
+                                                                  alignment: AlignmentDirectional(0, 0),
+                                                                  child: FittedBox(
+                                                                    fit: BoxFit.fill,
+                                                                    child: FaIcon(
+                                                                      FontAwesomeIcons.question,
+                                                                      color: Color(0xFFE30000),
+                                                                      size: 500,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ] else ...[
+                                                                if (globals.batteryState == -1)
+                                                                  const Align(
+                                                                    alignment: AlignmentDirectional(0, 0),
+                                                                    child: FittedBox(
+                                                                      fit: BoxFit.fill,
+                                                                      child: FaIcon(
+                                                                        FontAwesomeIcons.batteryEmpty,
+                                                                        color: Color(0xFFE35200),
+                                                                        size: 500,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                if (globals.batteryState == 0)
+                                                                  const Align(
+                                                                    alignment: AlignmentDirectional(0, 0),
+                                                                    child: FittedBox(
+                                                                      fit: BoxFit.fill,
+                                                                      child: FaIcon(
+                                                                        FontAwesomeIcons.bolt,
+                                                                        color: Color(0xFFDFBB00),
+                                                                        size: 500,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                                if (globals.batteryState == 1)
+                                                                  const Align(
+                                                                    alignment: AlignmentDirectional(0, 0),
+                                                                    child: FittedBox(
+                                                                      fit: BoxFit.fill,
+                                                                      child: FaIcon(
+                                                                        FontAwesomeIcons.batteryFull,
+                                                                        color: Color(0xFF00DF09),
+                                                                        size: 500,
+                                                                      ),
+                                                                    ),
+                                                                  ),
+                                                              ]
+                                                            ]),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                      Padding(
+                                                        padding: const EdgeInsetsDirectional.only(top: 8),
+                                                        child: AspectRatio(
+                                                          aspectRatio: 16 / 5,
+                                                          child: Container(
+                                                            decoration: BoxDecoration(
+                                                              borderRadius: BorderRadius.circular(20),
+                                                              shape: BoxShape.rectangle,
+                                                              color: const Color(0xFFF2F2F2),
+                                                            ),
+                                                            child: Padding(
+                                                              padding: const EdgeInsetsDirectional.fromSTEB(16, 7, 16, 7),
+                                                              child: FittedBox(
+                                                                fit: BoxFit.scaleDown,
+                                                                child: Stack(children: [
+                                                                  if (globals.connectionState == -1 || globals.connectionState == 0) ...[
+                                                                    const Text(
+                                                                      'Unknown',
+                                                                      textAlign: TextAlign.center,
+                                                                      style: TextStyle(
+                                                                        color: Color(0xFFE30000),
+                                                                        fontSize: 100,
+                                                                        fontWeight: FontWeight.bold,
+                                                                        height: 1.25,
+                                                                      ),
+                                                                    ),
+                                                                  ] else ...[
+                                                                    if (globals.batteryState == -1)
+                                                                      const Text(
+                                                                        'Low battery',
+                                                                        textAlign: TextAlign.center,
+                                                                        style: TextStyle(
+                                                                          color: Color(0xFFE35200),
+                                                                          fontSize: 100,
+                                                                          fontWeight: FontWeight.bold,
+                                                                          height: 1.25,
+                                                                        ),
+                                                                      ),
+                                                                    if (globals.batteryState == 0)
+                                                                      const Text(
+                                                                        'Charging',
+                                                                        textAlign: TextAlign.center,
+                                                                        style: TextStyle(
+                                                                          color: Color(0xFFDFBB00),
+                                                                          fontSize: 100,
+                                                                          fontWeight: FontWeight.bold,
+                                                                          height: 1.25,
+                                                                        ),
+                                                                      ),
+                                                                    if (globals.batteryState == 1)
+                                                                      const Text(
+                                                                        'Charged',
+                                                                        textAlign: TextAlign.center,
+                                                                        style: TextStyle(color: Color(0xFF00DF09), fontSize: 100, fontWeight: FontWeight.bold, height: 1.25),
+                                                                      ),
+                                                                  ],
+                                                                ]),
+                                                              ),
+                                                            ),
+                                                          ),
+                                                        ),
+                                                      ),
+                                                    ]),
+                                                  ),
+                                                ),
+                                              ),
+                                            ]));
+                                          },
+                                        );
+                                      },
+                                    ),
+                                  ],
+                                ),
+                              )
                             ],
-                          ),
+                          )))
+                ])
+              ]),
+            ),
+            navbar(context),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ---- Controller
+class ControllerPage extends StatefulWidget {
+  const ControllerPage({super.key});
+
+  @override
+  ControllerPageState createState() => ControllerPageState();
+}
+
+class ControllerPageState extends State<ControllerPage> {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color.fromARGB(255, 242, 242, 242),
+      body: SafeArea(
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsetsDirectional.fromSTEB(24, 24, 24, 108),
+              child: Column(children: [
+                Expanded(
+                  child: Container(
+                      decoration: const BoxDecoration(
+                        color: Color(0xFFE2E2E2),
+                        borderRadius: BorderRadius.all(Radius.circular(35)),
+                      ),
+                      child: Stack(children: [
+                        Column(
+                          children: [
+                            Joystick(
+                              onChanged: (newValue) {
+                                sendDataTCP("control", "drive=$newValue");
+                              },
+                              context: context,
+                              angle: 90,
+                            ),
+                            Joystick(
+                              onChanged: (newValue) {
+                                sendDataTCP("control", "turn=$newValue");
+                              },
+                              context: context,
+                              angle: 0,
+                            ),
+                          ],
                         ),
-                      ],
-                    ),
-                  ),
+                        Positioned(
+                          right: MediaQuery.of(context).size.aspectRatio * 20,
+                          top: 0,
+                          bottom: 0,
+                          child: Container(
+                            decoration: const BoxDecoration(
+                              color: Color(0xFFF2F2F2),
+                              shape: BoxShape.circle,
+                            ),
+                            width: MediaQuery.of(context).size.aspectRatio * 150,
+                            height: MediaQuery.of(context).size.aspectRatio * 150,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.open_in_full,
+                                size: MediaQuery.of(context).size.aspectRatio * 100,
+                                color: const Color(0xFFCC0000),
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                    context,
+                                    PageRouteBuilder(
+                                      //pageBuilder: (context, animation, secondaryAnimation) => FullControllerPage(),
+                                      pageBuilder: (context, animation, secondaryAnimation) => pages.elementAt(1),
+                                      transitionDuration: const Duration(milliseconds: 180),
+                                      transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
+                                    ));
+                              },
+                            ),
+                          ),
+                        )
+                      ])),
                 )
-              ],
-            )
-          ]),
+              ]),
+            ),
+            navbar(context),
+          ],
         ),
       ),
     );
@@ -634,6 +789,78 @@ class CameraPageState extends State<CameraPage> {
       ),
     );
   }
+}
+
+Widget navbarItem(IconData icon, int index, dynamic context) {
+  return Expanded(
+    child: GestureDetector(
+      onTap: () {
+        globals.currentPageIndex = index;
+        Navigator.push(
+            context,
+            PageRouteBuilder(
+              pageBuilder: (context, animation, secondaryAnimation) => pages.elementAt(index),
+              transitionDuration: const Duration(milliseconds: 180),
+              transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
+            ));
+      },
+      child: Container(
+        decoration: BoxDecoration(
+          border: Border(
+            left: const BorderSide(width: 0, color: Color(0x00000000)),
+            top: const BorderSide(width: 0, color: Color(0x00000000)),
+            right: const BorderSide(width: 0, color: Color(0x00000000)),
+            bottom: BorderSide(width: MediaQuery.of(context).size.height * 0.005, color: globals.currentPageIndex == index ? const Color(0xFFFFFFFF) : const Color(0x00000000)),
+          ),
+        ),
+        child: Padding(
+          padding: const EdgeInsetsDirectional.all(10),
+          child: Icon(
+            icon,
+            size: MediaQuery.of(context).size.height * 0.055,
+            color: globals.currentPageIndex == index ? const Color(0xFFFFFFFF) : const Color(0xFFF2F2F2),
+          ),
+        ),
+      ),
+    ),
+  );
+}
+
+Widget navbar(context) {
+  return Positioned(
+    bottom: 0,
+    left: 0,
+    right: 0,
+    child: Container(
+      height: MediaQuery.of(context).size.height * 0.1,
+      decoration: BoxDecoration(
+        color: const Color(0xFFCC0000),
+        borderRadius: BorderRadiusDirectional.vertical(
+          top: Radius.circular(MediaQuery.of(context).size.height * 0.05),
+          bottom: const Radius.circular(0),
+        ),
+      ),
+      child: Column(
+        children: [
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsetsDirectional.all(5),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  navbarItem(Icons.home, 0, context),
+                  navbarItem(Icons.directions_car, 1, context),
+                  navbarItem(Icons.pin_drop, 2, context),
+                  navbarItem(Icons.memory, 3, context),
+                  navbarItem(Icons.account_circle, 4, context),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    ),
+  );
 }
 
 // ---- Pop up
