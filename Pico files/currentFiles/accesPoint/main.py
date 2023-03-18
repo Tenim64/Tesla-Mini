@@ -99,27 +99,72 @@ def setupSerial():
 
 def sendSerial(data):
     global uart
-    # Write that this the start of the data packet
-    uart.write("\\start\\")
-    # Write data to serial
-    uart.write(data)
-    # Write that this the end of the data packet
-    uart.write("\\end\\")
+    
+    tries = 0
+    
+    while True :
+        tries += 1
+        # Write that this the start of the data packet
+        uart.write("\\start\\")
+        # Write data to serial
+        uart.write(data)
+        # Write that this the end of the data packet
+        uart.write("\\end\\")
+        
+        # Stop if response
+        if getSerialHandshake():
+            break
+        # Stop if no response
+        if tries >= 5 and (not getSerialHandshake()):
+            break
+        
+    if tries >= 5:
+        print("failed to send data, no response")
+    else:
+        print("serial data sent: ", data)
+    
+def getSerialHandshake():
+    global uart
+    
+    buffer = ""
+    while True:
+        try:
+            if uart.any():
+                buffer += uart.read().decode()
+                if "\\end\\" in buffer:
+                    if "\\start\\" in buffer:
+                        data = buffer.replace("\\start\\","").replace("\\end\\","")
+                        if data == "ACK":
+                            print("ack gotten")
+                            return True
+                        else:
+                            return False
+                    else:
+                        print("Corrupted data")
+                    buffer = ""
+                    return False
+        except Exception as e:
+            print(e)
+            print("Corrupted data")
+            buffer = ""
+            return False
 
-    print("serial data sent: ", data)
 
 
 
 # -------------------------------- Network --------------------------------
 # ---------- Functions ----------
-def processGetRequest(data):
+def processGetRequest(data_title):
     global sConn, lowbatteryPin, chargingPin
 
     response = ""
 
+    print("data_title: ", data_title)
     if data_title == "battery":
         lowbattery = not lowbatteryPin.value()
         charging = chargingPin.value()
+        print("lowbattery: ", lowbattery)
+        print("charging: ", charging)
 
         if lowbattery:
             response = "low"

@@ -52,11 +52,14 @@ def blink(blinks):
     
 # -------------------------------- Program --------------------------------
 def processData(data):
-    global motorCurrentSpeed, motorCurrentDirection
+    global uart, motorCurrentSpeed, motorCurrentDirection
                 
     data_title, _, data_data = data.partition("\\-\\")
     print(f"{data_title} - {data_data}")
 
+    # Confirm arrival of data
+    sendSerial("ACK")
+    
     if data_title and data_data:
 
         if (data_title == "state"):
@@ -68,6 +71,14 @@ def processData(data):
                 motor_Brake()
 
         if (data_title == "control"):
+            if ("drive" in data_data):
+                driveValue = int(data_data.split("drive=", 1)[1])
+                speed = abs(driveValue)
+                direction = round(driveValue / 100)
+                motor_Drive(speed, direction)
+            if ("turn" in data_data):
+                turnValue = int(data_data.split("turn=", 1)[1])
+                servo_TurnPercentage(turnValue)
             if (data_data == "forwards"):
                 motorCurrentDirection = 1
                 motor_Forwards(motorCurrentSpeed + 10)
@@ -100,7 +111,29 @@ def main():
     servo_SetPosition(servo_currentPosition_Percentage)
     # Set the default motor speed
     motor_SetSpeed(motorCurrentSpeed, motorCurrentDirection)
-    # Buffer for reading serial data
+    # Read serial data
+    readSerial()
+
+
+# -------------------------------- Serial --------------------------------
+# ---------- Functions ----------
+def setupSerial():
+    global uart
+    uart = machine.UART(0, baudrate=9600)
+    uart.init(baudrate=9600, bits=8, parity=None, stop=1)
+    
+def sendSerial(data):
+    global uart
+    # Write that this the start of the data packet
+    uart.write("\\start\\")
+    # Write data to serial
+    uart.write(data)
+    # Write that this the end of the data packet
+    uart.write("\\end\\")
+
+    print("serial data sent: ", data)
+    
+def readSerial():
     buffer = ""
     while True:
         try:
@@ -116,14 +149,8 @@ def main():
                     buffer = ""
         except Exception as e:
             print(e)
-
-
-# -------------------------------- Serial --------------------------------
-# ---------- Functions ----------
-def setupSerial():
-    global uart
-    uart = machine.UART(0, baudrate=9600)
-    uart.init(baudrate=9600, bits=8, parity=None, stop=1)
+            print("Corrupted data")
+            buffer = ""
 
 
 
@@ -165,7 +192,7 @@ def servo_PercentageToDegrees(position_Percentage):
 # Turn function using percentage as input
 def servo_TurnPercentage(position_Percentage):
     # Position(%) ∈ [ -100 ; 100 ]
-    positionProcessed_Percentage = min(max(position_Percentage, -100), 100)
+    positionProcessed_Percentage = min(max(position_Percentage, -100), 100) * -1
 
     # Save new position
     global servo_currentPosition_Percentage
