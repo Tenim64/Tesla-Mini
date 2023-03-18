@@ -16,7 +16,7 @@ void testTCP() {
   sendDataTCP('state', 'Testing');
 }
 
-Future<bool> checkTCPServerStatus() async {
+Future<bool> checkTCPServerState() async {
   globals.connectionState = 0;
   globals.connectionStateNotifier.notifyListeners();
   Timer timeoutTimer = Timer(const Duration(seconds: 2), () {
@@ -41,12 +41,14 @@ Future<bool> checkTCPServerStatus() async {
     globals.connectionState = globals.isTCPServerActive ? 1 : -1;
     globals.connectionStateNotifier.notifyListeners();
   }
+
+  printMessage("TCPServerState: ${globals.isTCPServerActive}");
   return globals.isTCPServerActive;
 }
 
 // Send data to tcp server
 Future<void> sendDataTCP(String title, String data) async {
-  if (globals.isTCPServerActive || await checkTCPServerStatus()) {
+  if (globals.isTCPServerActive || await checkTCPServerState()) {
     sendRequestTCP(packageMaker(title, data));
   }
 }
@@ -77,11 +79,40 @@ Future<void> sendRequestTCP(String data) async {
 
 // Get data from tcp server
 Future<String> getDataTCP(String title, String data) async {
-  // Yet to come
-  return getRequestTCP(packageMaker(title, data));
+  if (globals.isTCPServerActive || await checkTCPServerState()) {
+    return getRequestTCP(packageMaker(title, data));
+  }
+
+  globals.connectionState = -1;
+  globals.batteryState = -1;
+  globals.connectionStateNotifier.notifyListeners();
+
+  return "No response";
 }
 
 Future<String> getRequestTCP(String data) async {
-  // Yet to come
-  return "";
+  String output = "";
+
+  try {
+    // Connect to socket
+    if (globals.socketTCP == null) {
+      await globals.connectSocket();
+    }
+    // Get data
+    printMessage("Getting data: $data");
+    globals.socketTCP!.writeln(data);
+    output = String.fromCharCodes(await globals.socketTCP!.first);
+    printMessage("Got data: $output");
+  } catch (e) {
+    printErrorMessage("Error occurred: $e");
+
+    globals.setDialog("Error!", e.toString(), "Close", globals.closeDialog, "", globals.closeDialog, 1);
+    globals.updateDialog();
+
+    output = e.toString();
+  }
+
+  globals.socketTCP = null;
+
+  return output;
 }

@@ -14,7 +14,7 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'dart:math' as math;
 
 // ---------- Extra
-final List<Widget> pages = [const HomePage(), const ControllerPage()];
+final List<Widget> pages = [const HomePage(), const ControllerPage(), CameraPage(camera: globals.mainCamera)];
 
 // ---------- Widgets
 String welcomeText() {
@@ -240,7 +240,7 @@ class HomePageState extends State<HomePage> {
                                             ),
                                             GestureDetector(
                                               onTap: () {
-                                                checkTCPServerStatus();
+                                                getCarState();
                                               },
                                               child: Container(
                                                 decoration: BoxDecoration(
@@ -589,14 +589,14 @@ class ControllerPageState extends State<ControllerPage> {
                           children: [
                             Joystick(
                               onChanged: (newValue) {
-                                sendDataTCP("control", "drive=$newValue");
+                                sendDataTCP("control", "turn=${newValue.round()}");
                               },
                               context: context,
                               angle: 90,
                             ),
                             Joystick(
                               onChanged: (newValue) {
-                                sendDataTCP("control", "turn=$newValue");
+                                sendDataTCP("control", "drive=${newValue.round()}");
                               },
                               context: context,
                               angle: 0,
@@ -804,21 +804,24 @@ Widget navbarItem(IconData icon, int index, dynamic context) {
               transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
             ));
       },
-      child: Container(
-        decoration: BoxDecoration(
-          border: Border(
-            left: const BorderSide(width: 0, color: Color(0x00000000)),
-            top: const BorderSide(width: 0, color: Color(0x00000000)),
-            right: const BorderSide(width: 0, color: Color(0x00000000)),
-            bottom: BorderSide(width: MediaQuery.of(context).size.height * 0.005, color: globals.currentPageIndex == index ? const Color(0xFFFFFFFF) : const Color(0x00000000)),
+      child: Padding(
+        padding: const EdgeInsetsDirectional.fromSTEB(6, 0, 6, 4),
+        child: Container(
+          decoration: BoxDecoration(
+            border: Border(
+              left: const BorderSide(width: 0, color: Color(0x00000000)),
+              top: const BorderSide(width: 0, color: Color(0x00000000)),
+              right: const BorderSide(width: 0, color: Color(0x00000000)),
+              bottom: BorderSide(width: MediaQuery.of(context).size.height * 0.004, color: globals.currentPageIndex == index ? const Color(0xFFFFFFFF) : const Color(0x00000000)),
+            ),
           ),
-        ),
-        child: Padding(
-          padding: const EdgeInsetsDirectional.all(10),
-          child: Icon(
-            icon,
-            size: MediaQuery.of(context).size.height * 0.055,
-            color: globals.currentPageIndex == index ? const Color(0xFFFFFFFF) : const Color(0xFFF2F2F2),
+          child: Padding(
+            padding: const EdgeInsetsDirectional.fromSTEB(4, 10, 4, 2),
+            child: Icon(
+              icon,
+              size: MediaQuery.of(context).size.height * 0.055,
+              color: globals.currentPageIndex == index ? const Color(0xFFFFFFFF) : const Color(0xFFE2E2E2),
+            ),
           ),
         ),
       ),
@@ -844,7 +847,7 @@ Widget navbar(context) {
         children: [
           Expanded(
             child: Padding(
-              padding: const EdgeInsetsDirectional.all(5),
+              padding: const EdgeInsetsDirectional.fromSTEB(12, 6, 12, 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                 children: [
