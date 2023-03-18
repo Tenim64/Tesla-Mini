@@ -1,6 +1,6 @@
 # ---------- Packages ----------
 import machine
-
+import time
 
 # ---------- Variables ----------
 # Servo pin number
@@ -95,3 +95,18 @@ def servo_TurnRight(positionChange_Percentage):
     
 # Default position
 servo_SetPosition(servo_currentPosition_Percentage)
+
+def test():
+    d = 0.02
+    d2 = 0.5
+    for i in range(-100, 100):
+        servo_SetPosition(i)
+        time.sleep(d)
+    time.sleep(d2)
+    for i in range(100, -100, -1):
+        servo_SetPosition(i)
+        time.sleep(d)
+    time.sleep(d2)
+    
+while True:
+    test()

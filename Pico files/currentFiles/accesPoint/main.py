@@ -30,6 +30,10 @@ sConn = None
 uart = None
 led = Pin("LED", Pin.OUT)
 production = False
+# Low battery pin
+lowbatteryPin = Pin(21, Pin.IN, Pin.PULL_UP)
+# Charging pin
+chargingPin = Pin(19, Pin.IN, Pin.PULL_UP)
 
 
 # ---------- Debug tools ----------
@@ -70,7 +74,6 @@ def main():
             try:
                 # Receive data from the socket
                 receiveSocketData()
-                # Receive data from the socket
                 closeSocket()
             except Exception as e:
                 print(e)
@@ -96,24 +99,85 @@ def setupSerial():
 
 def sendSerial(data):
     global uart
-    # Write that this the start of the data packet
-    uart.write("\\start\\")
-    # Write data to serial
-    uart.write(data)
-    # Write that this the end of the data packet
-    uart.write("\\end\\")
+    
+    tries = 0
+    
+    while True :
+        tries += 1
+        # Write that this the start of the data packet
+        uart.write("\\start\\")
+        # Write data to serial
+        uart.write(data)
+        # Write that this the end of the data packet
+        uart.write("\\end\\")
+        
+        # Stop if response
+        if getSerialHandshake():
+            break
+        # Stop if no response
+        if tries >= 5 and (not getSerialHandshake()):
+            break
+        
+    if tries >= 5:
+        print("failed to send data, no response")
+    else:
+        print("serial data sent: ", data)
+    
+def getSerialHandshake():
+    global uart
+    
+    buffer = ""
+    while True:
+        try:
+            if uart.any():
+                buffer += uart.read().decode()
+                if "\\end\\" in buffer:
+                    if "\\start\\" in buffer:
+                        data = buffer.replace("\\start\\","").replace("\\end\\","")
+                        if data == "ACK":
+                            print("ack gotten")
+                            return True
+                        else:
+                            return False
+                    else:
+                        print("Corrupted data")
+                    buffer = ""
+                    return False
+        except Exception as e:
+            print(e)
+            print("Corrupted data")
+            buffer = ""
+            return False
 
-    print("serial data sent: ", data)
 
 
 
 # -------------------------------- Network --------------------------------
 # ---------- Functions ----------
+def processGetRequest(data_title):
+    global sConn, lowbatteryPin, chargingPin
+
+    response = ""
+
+    print("data_title: ", data_title)
+    if data_title == "battery":
+        lowbattery = not lowbatteryPin.value()
+        charging = chargingPin.value()
+        print("lowbattery: ", lowbattery)
+        print("charging: ", charging)
+
+        if lowbattery:
+            response = "low"
+            if charging:
+                response = "charging"
+        if lowbatteryPin.value():
+            response = "charged"
+
+    sConn.send(response.encode())    
+
 def processData(data):
     blink(1)
     print("Data received!")
-
-    global sConn
 
     # Get data from json
     data_object = json.loads(data)
@@ -121,13 +185,16 @@ def processData(data):
     data_data = data_object["data"]
     
     # If no data was found, return
-    if data_title != None:
-        # Send to data to RPI Pico
-        print(f"{data_title} - {data_data}")
-        sendSerial(f"{data_title}\\-\\{data_data}")
+    if data_title == None:
+        return
+    # If no data was found, return
+    if data_title == "get":
+        processGetRequest(data_data)
+        return
 
-    # Close connection
-    sConn.close() 
+    # Send to data to RPI Pico
+    print(f"{data_title} - {data_data}")
+    sendSerial(f"{data_title}\\-\\{data_data}")
 
 
 # ---------- Setup network ----------
@@ -205,6 +272,8 @@ def receiveSocketData():
             continue
         if data != None:
             processData(data)
+            # Close connection
+            sConn.close() 
 
         data = None
         
