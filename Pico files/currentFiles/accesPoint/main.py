@@ -31,9 +31,9 @@ uart = None
 led = Pin("LED", Pin.OUT)
 production = False
 # Low battery pin
-lowbatteryPin = Pin(21, Pin.IN, Pin.PULL_UP)
+lowbatteryPin = Pin(21, Pin.IN)
 # Charging pin
-chargingPin = Pin(19, Pin.IN, Pin.PULL_UP)
+chargingPin = Pin(19, Pin.IN)
 
 
 # ---------- Debug tools ----------
@@ -154,25 +154,26 @@ def getSerialHandshake():
 
 # -------------------------------- Network --------------------------------
 # ---------- Functions ----------
-def processGetRequest(data_title):
+def processGetRequest(data_request):
     global sConn, lowbatteryPin, chargingPin
 
     response = ""
 
-    print("data_title: ", data_title)
-    if data_title == "battery":
+    print("data_request: ", data_request)
+    if data_request == "battery":
         lowbattery = not lowbatteryPin.value()
-        charging = chargingPin.value()
+        charging = not not chargingPin.value()
         print("lowbattery: ", lowbattery)
         print("charging: ", charging)
 
         if lowbattery:
             response = "low"
-            if charging:
-                response = "charging"
-        if lowbatteryPin.value():
+        else:
             response = "charged"
+        if charging:
+            response = "charging"
 
+    print("response: ", response)
     sConn.send(response.encode())    
 
 def processData(data):
