@@ -3,6 +3,7 @@
 
 import 'dart:async';
 import 'dart:core';
+import 'dart:io';
 import 'package:tesla_mini/debugger.dart';
 import 'package:tesla_mini/globals.dart' as globals;
 import 'dart:convert';
@@ -110,15 +111,19 @@ Future<String> getRequestTCP(String data) async {
     printMessage("Getting data: $data");
     globals.socketTCP!.writeln(data);
     output = String.fromCharCodes(await globals.socketTCP!.first);
+    await globals.socketTCP!.done;
     printMessage("Got data: $output");
   } catch (e) {
+    globals.isTCPServerActive = false;
+    globals.socketTCP = null;
+
     printErrorMessage("Error occurred: $e");
 
     globals.setDialog("Error!", e.toString(), "Close", globals.closeDialog, "",
         globals.closeDialog, 1);
     globals.updateDialog();
 
-    output = e.toString();
+    output = "No response";
   }
 
   globals.socketTCP = null;
