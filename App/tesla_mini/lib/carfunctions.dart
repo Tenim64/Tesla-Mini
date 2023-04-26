@@ -26,7 +26,7 @@ Future<void> getSetBatteryState() async {
       globals.batteryState = -1;
       break;
   }
-  printMessage("batteryState: ${globals.batteryState}");
+  printMessage("batteryState: $response => ${globals.batteryState}");
   globals.batteryStateNotifier.notifyListeners();
 }
 
