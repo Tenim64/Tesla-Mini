@@ -65,13 +65,21 @@ Future<void> sendRequestTCP(String data) async {
     if (jsonDecode(data)['data'] == 'Testing') {
       // Print in debug console
       printMessage("Data sent: $data");
-      globals.setDialog("Data sent!", "A connection was made/found and data has been sent", "Ok", globals.closeDialog, "", globals.closeDialog, 1);
+      globals.setDialog(
+          "Data sent!",
+          "A connection was made/found and data has been sent",
+          "Ok",
+          globals.closeDialog,
+          "",
+          globals.closeDialog,
+          1);
       globals.updateDialog();
     }
   } catch (e) {
     printErrorMessage("Error occurred: $e");
 
-    globals.setDialog("Error!", e.toString(), "Close", globals.closeDialog, "", globals.closeDialog, 1);
+    globals.setDialog("Error!", e.toString(), "Close", globals.closeDialog, "",
+        globals.closeDialog, 1);
     globals.updateDialog();
   }
   globals.socketTCP = null;
@@ -106,7 +114,8 @@ Future<String> getRequestTCP(String data) async {
   } catch (e) {
     printErrorMessage("Error occurred: $e");
 
-    globals.setDialog("Error!", e.toString(), "Close", globals.closeDialog, "", globals.closeDialog, 1);
+    globals.setDialog("Error!", e.toString(), "Close", globals.closeDialog, "",
+        globals.closeDialog, 1);
     globals.updateDialog();
 
     output = e.toString();
