@@ -181,6 +181,7 @@ def processData(data):
     print("Data received!")
 
     # Get data from json
+    print(data)
     data_object = json.loads(data)
     data_title = data_object["title"]
     data_data = data_object["data"]
@@ -192,10 +193,41 @@ def processData(data):
     if data_title == "get":
         processGetRequest(data_data)
         return
+    # If no data was found, return
+    if data_title == "connection":
+        if data_title == "open":
+            connection()
+            return
 
     # Send to data to RPI Pico
     print(f"{data_title} - {data_data}")
     sendSerial(f"{data_title}\\-\\{data_data}")
+    
+def processConnection(data):
+    # Get data from json
+    print(data)
+    data_object = json.loads(data)
+    data_title = data_object["title"]
+    data_data = data_object["data"]
+
+    # Send to data to RPI Pico
+    print(f"{data_title} - {data_data}")
+    sendSerial(f"{data_title}\\-\\{data_data}")
+
+def connection():
+    while True: 
+        if data_title == "connection":
+            if data_title == "close":
+                break
+        
+        # If there is data, process it
+        data = sConn.recv(1024).decode()
+        if not data:
+            continue
+        if data != None:
+            processConnection(data)
+
+        data = None
 
 
 # ---------- Setup network ----------
@@ -273,10 +305,10 @@ def receiveSocketData():
             continue
         if data != None:
             processData(data)
-            # Close connection
-            sConn.close() 
+            break
 
         data = None
+    sConn.close()
         
 def closeSocket():
     global s

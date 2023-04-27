@@ -6,6 +6,7 @@ library tesla_mini.globals;
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:tesla_mini/debugger.dart';
+import 'dart:convert';
 
 var mainCamera;
 int currentPageIndex = 0;
@@ -28,6 +29,10 @@ Future<void> updateRecognitions(var inputRecognitions) async {
 }
 
 // Socket
+String packageMaker(String title, String data) {
+  return json.encode({'title': title, 'data': data});
+}
+
 bool isTCPServerActive = false;
 const tcpIpAddress = '192.168.4.1';
 const tcpPort = 80;
@@ -54,6 +59,62 @@ Future<void> connectSocket() async {
     socketTCP = socket;
   } catch (error) {
     throw Exception(error);
+  }
+}
+
+SocketClient socketClient = SocketClient();
+
+class SocketClient {
+  Socket? socket;
+
+  Future<void> connect() async {
+    try {
+      socket = await Socket.connect(tcpIpAddress, tcpPort,
+          timeout: const Duration(milliseconds: 3000));
+      printMessage(
+          'Connected to: ${socket?.remoteAddress.address}:${socket?.remotePort}');
+      await sendData("connection", "open");
+    } catch (e) {
+      printErrorMessage('Error connecting: $e');
+      setDialog("Error connecting!", e.toString(), "Ok", closeDialog, "",
+          closeDialog, 1);
+      updateDialog();
+      rethrow;
+    }
+  }
+
+  Future<void> sendData(String title, String data) async {
+    String jsonData = packageMaker(title, data);
+    if (socket != null) {
+      try {
+        socket?.write(jsonData);
+        await socket?.flush();
+        printMessage('Sent: $jsonData');
+      } catch (e) {
+        printErrorMessage('Error sending data: $e');
+        rethrow;
+      }
+    } else {
+      printErrorMessage('Socket not connected.');
+    }
+  }
+
+  Future<void> disconnect() async {
+    if (socket != null) {
+      try {
+        await sendData("connection", "close");
+        await socket?.close();
+        socket = null;
+        printMessage('Disconnected.');
+      } catch (e) {
+        printErrorMessage('Error disconnecting: $e');
+        setDialog("Error disconnecting!", e.toString(), "Ok", closeDialog, "",
+            closeDialog, 1);
+        updateDialog();
+      }
+    } else {
+      printErrorMessage('Socket not connected.');
+    }
   }
 }
 

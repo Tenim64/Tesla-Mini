@@ -842,7 +842,7 @@ class ControllerPageState extends State<ControllerPage> {
                           children: [
                             Joystick(
                               onChanged: (newValue) {
-                                sendDataTCP(
+                                globals.socketClient.sendData(
                                     "control", "turn=${newValue.round()}");
                               },
                               context: context,
@@ -850,7 +850,7 @@ class ControllerPageState extends State<ControllerPage> {
                             ),
                             Joystick(
                               onChanged: (newValue) {
-                                sendDataTCP(
+                                globals.socketClient.sendData(
                                     "control", "drive=${newValue.round()}");
                               },
                               context: context,
@@ -1054,7 +1054,17 @@ class CameraPageState extends State<CameraPage> {
 Widget navbarItem(IconData icon, int index, dynamic context) {
   return Expanded(
     child: GestureDetector(
-      onTap: () {
+      onTap: () async {
+        if (globals.currentPageIndex == 1) {
+          await socketClient.disconnect();
+        }
+        if (index == 1) {
+          try {
+            await socketClient.connect();
+          } catch (e) {
+            return;
+          }
+        }
         globals.currentPageIndex = index;
         Navigator.push(
             context,
