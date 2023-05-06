@@ -69,7 +69,7 @@ def main():
         # Setup the network
         setupNetwork()
         # Make a socket
-        makeSocket()
+        makeSocket(wlan)
         while True:
             try:
                 # Receive data from the socket
@@ -83,7 +83,7 @@ def main():
                 except Exception as e2:
                     print(e2)
                     # Remake a socket
-                    makeSocket()
+                    makeSocket(wlan)
     except Exception as e:
         print(e)
 
@@ -121,7 +121,7 @@ def sendSerial(data):
     if tries >= 5:
         print("failed to send data, no response")
     else:
-        print("serial data successfully sent: ", data)
+        print("serial data sent: ", data)
     
 def getSerialHandshake():
     global uart
@@ -157,8 +157,7 @@ def getSerialHandshake():
 def processGetRequest(data_request):
     global sConn, lowbatteryPin, chargingPin
 
-    response = {}
-    response["title"] = data_request
+    response = ""
 
     print("data_request: ", data_request)
     if data_request == "battery":
@@ -166,63 +165,43 @@ def processGetRequest(data_request):
         charging = not not chargingPin.value()
         print("lowbattery: ", lowbattery)
         print("charging: ", charging)
-        
-        if lowbattery:
-            response["data"] = "low"
-        else:
-            response["data"] = "charged"
-        if charging:
-            response["data"] = "charging"
 
-    if data_request == "connection":
-        response["data"] = "active"
-        
-    print("response: ", json.dumps(response))
-    sConn.send(json.dumps(response).encode())    
+        if lowbattery:
+            response = "low"
+        else:
+            response = "charged"
+        if charging:
+            response = "charging"
+
+    print("response: ", response)
+    sConn.send(response.encode())    
 
 def processData(data):
-    if data == "":
-        return
-    # Get data from json
-    try:
-        data_object = json.loads(data)
-        data_title = data_object["title"]
-    except:
-        return
-    
-    print("Data received!")
     blink(1)
+    print("Data received!")
+
+    # Get data from json
+    data_object = json.loads(data)
+    data_title = data_object["title"]
+    data_data = data_object["data"]
     
     # If no data was found, return
     if data_title == None:
         return
-    # Get requests
+    # If no data was found, return
     if data_title == "get":
-        data_data = data_object["data"]
         processGetRequest(data_data)
         return
-    if data_title == "connection":
-        print("Connection change: acknowledged")
-        sConn.send("ack".encode())    
-        return
-    if data_title == "control":
-        data_speed = data_object["speed"]
-        data_turnAngle = data_object["turnAngle"]
-        # Send to data to RPI Pico
-        print(f"speed - {data_speed}")
-        sendSerial(f"{data_title}\\-\\drive={data_speed}")
-        print(f"turnAngle - {data_turnAngle}")
-        sendSerial(f"{data_title}\\-\\turn={data_turnAngle}")
-        sConn.send("{\"title\": \"getControls\"}".encode())
-        return
 
-    sConn.send("ack".encode())   
+    # Send to data to RPI Pico
+    print(f"{data_title} - {data_data}")
+    sendSerial(f"{data_title}\\-\\{data_data}")
 
 
 # ---------- Setup network ----------
 def setupNetwork():
-    global wlan
     
+    global wlan
     print('Setting up network...')
     # Set network type
     wlan = network.WLAN(network.AP_IF)
@@ -251,8 +230,8 @@ def stopNetwork():
     print('Stopped network')
 
 # ---------- Connecting ----------
-def makeSocket():
-    global s, wlan
+def makeSocket(wlan):
+    global s
     # Remove possible previous socket
     try:
         s.close()
@@ -263,20 +242,23 @@ def makeSocket():
     s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     # Bind the socket to a local address and port
     s.bind((wlan.ifconfig()[0], 80))
+    s.setblocking(1)
     print("Socket bound")
     listenToSocket()
 
 def listenToSocket():
     global s, sConn
     # Listen for incoming connections
-    s.listen(1)
+    s.listen()
     print("Listening to socket")
 
     # Accept an incoming connection
-    try:
-        sConn, sAddr = s.accept()
-    except Exception as e:
-        pass
+    while True:
+        try:
+            sConn, sAddr = s.accept()
+            break
+        except Exception as e:
+            pass
     print("Connection made")    
     blink(1)
 
@@ -285,22 +267,17 @@ def receiveSocketData():
     # Continuously receive data and process it
     data = None
     while True:
-        for i in range(0,1000):
-            # If there is data, process it
-            data = sConn.readline()
+        # If there is data, process it
+        data = sConn.recv(1024).decode()
+        if not data:
+            continue
+        if data != None:
             processData(data)
-        try:
-            sConn.send("status check")
-            print("status check: success")
-        except:
-            print("status check: fail")
-            break
-            
-def closeConnection():
-    global sConn
+            # Close connection
+            sConn.close() 
 
-    sConn.close() 
-    
+        data = None
+        
 def closeSocket():
     global s
     
@@ -308,4 +285,3 @@ def closeSocket():
         
 # Run
 boot()
-

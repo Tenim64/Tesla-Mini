@@ -1,5 +1,7 @@
 // ignore_for_file: non_constant_identifier_names
 // ---------- Packages
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
@@ -842,16 +844,14 @@ class ControllerPageState extends State<ControllerPage> {
                           children: [
                             Joystick(
                               onChanged: (newValue) {
-                                globals.socketClient.sendData(
-                                    "control", "turn=${newValue.round()}");
+                                setTurnPercentage(newValue.round());
                               },
                               context: context,
                               angle: 90,
                             ),
                             Joystick(
                               onChanged: (newValue) {
-                                globals.socketClient.sendData(
-                                    "control", "drive=${newValue.round()}");
+                                setSpeed(newValue.round());
                               },
                               context: context,
                               angle: 0,
@@ -1055,17 +1055,8 @@ Widget navbarItem(IconData icon, int index, dynamic context) {
   return Expanded(
     child: GestureDetector(
       onTap: () async {
-        if (globals.currentPageIndex == 1) {
-          await socketClient.disconnect();
-        }
-        if (index == 1) {
-          try {
-            await socketClient.connect();
-          } catch (e) {
-            return;
-          }
-        }
         globals.currentPageIndex = index;
+
         Navigator.push(
             context,
             PageRouteBuilder(

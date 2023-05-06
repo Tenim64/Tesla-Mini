@@ -145,7 +145,7 @@ def readSerial():
                         processData(data)
                         print("Serial data: ", data)
                     else:
-                        print("Corrupted data")
+                        print("Corrupted data: ", buffer)
                     buffer = ""
         except Exception as e:
             print(e)

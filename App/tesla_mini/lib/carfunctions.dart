@@ -6,12 +6,15 @@ import 'package:tesla_mini/debugger.dart';
 import 'package:tesla_mini/tcpserver.dart';
 
 Future<void> getCarState() async {
-  await checkTCPServerState();
-  await getSetBatteryState();
+  await globals.socketClient.manualConnectionCheck();
+  getSetBatteryState();
 }
 
-Future<void> getSetBatteryState() async {
-  String response = await getDataTCP("get", "battery");
+void getSetBatteryState() {
+  globals.socketClient.sendData(globals.packageMaker("get", "battery"));
+}
+
+void processBatteryState(response) {
   switch (response) {
     case "charged":
       globals.batteryState = 1;
@@ -30,10 +33,17 @@ Future<void> getSetBatteryState() async {
   globals.batteryStateNotifier.notifyListeners();
 }
 
-void setSpeed(double speed) {
-  sendDataTCP("control", "speed: $speed");
+void sendControllerData() {
+  globals.socketClient.sendData(globals.controlsPackageMaker(
+      globals.speed.toString(), globals.turnAngle.toString()));
 }
 
-void setTurnPercentage(double percentage) {
-  sendDataTCP("control", "turn: $percentage");
+void setSpeed(int speed) {
+  globals.speed = speed;
+  sendControllerData();
+}
+
+void setTurnPercentage(int percentage) {
+  globals.turnAngle = percentage;
+  sendControllerData();
 }

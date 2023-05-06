@@ -1,15 +1,21 @@
-// ignore_for_file: prefer_typing_uninitialized_variables, invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member
+// ignore_for_file: prefer_typing_uninitialized_variables, invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member, empty_catches
 
 // Packages
 library tesla_mini.globals;
 
 import 'dart:io';
+import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:tesla_mini/debugger.dart';
+import 'package:tesla_mini/carfunctions.dart';
 import 'dart:convert';
+import 'dart:async';
 
 var mainCamera;
 int currentPageIndex = 0;
+late Timer controllerTimer;
+int turnAngle = 0;
+int speed = 0;
 
 // Tflite
 Map<String, Object> recognitions = {};
@@ -30,7 +36,12 @@ Future<void> updateRecognitions(var inputRecognitions) async {
 
 // Socket
 String packageMaker(String title, String data) {
-  return json.encode({'title': title, 'data': data});
+  return json.encode({'size': '1', 'title': title, 'data': data});
+}
+
+String controlsPackageMaker(String speed, String turnAngle) {
+  return json
+      .encode({'title': 'control', 'speed': speed, 'turnAngle': turnAngle});
 }
 
 bool isTCPServerActive = false;
@@ -66,32 +77,99 @@ SocketClient socketClient = SocketClient();
 
 class SocketClient {
   Socket? socket;
+  bool connected = false;
+  bool processing = false;
 
-  Future<void> connect() async {
+  Future<void> connectionCheck() async {
     try {
-      socket = await Socket.connect(tcpIpAddress, tcpPort,
-          timeout: const Duration(milliseconds: 3000));
-      printMessage(
-          'Connected to: ${socket?.remoteAddress.address}:${socket?.remotePort}');
-      await sendData("connection", "open");
+      if (!connected && socket!.address.address.isEmpty) {
+        await connect();
+      }
+      printMessage("Connection check: connected");
+      connected = true;
     } catch (e) {
+      printMessage("Connection check: not connected");
+      connected = false;
+    }
+    connectionState = connected ? 1 : -1;
+    connectionStateNotifier.notifyListeners();
+  }
+
+  Future<void> manualConnectionCheck() async {
+    connectionState = 0;
+    connectionStateNotifier.notifyListeners();
+    Timer timeoutTimer = Timer(const Duration(seconds: 2), () {
+      connectionState = connected ? 1 : -1;
+      connectionStateNotifier.notifyListeners();
+    });
+    try {
+      if (connected) {
+        await socket?.close();
+      }
+    } catch (e) {}
+    try {
+      await connect();
+      connectionState = 1;
+      connectionStateNotifier.notifyListeners();
+    } catch (e) {
+      connectionState = -1;
+      connectionStateNotifier.notifyListeners();
       printErrorMessage('Error connecting: $e');
       setDialog("Error connecting!", e.toString(), "Ok", closeDialog, "",
           closeDialog, 1);
       updateDialog();
+    }
+  }
+
+  Future<void> connect() async {
+    try {
+      socket = await Socket.connect(tcpIpAddress, tcpPort,
+          timeout: const Duration(milliseconds: 1000));
+      socket?.listen((data) {
+        printMessage("Received: ${String.fromCharCodes(data).trim()}");
+        processing = false;
+        processData(data);
+      }, onDone: () {
+        printMessage("Disconnected by host");
+        connected = false;
+        connectionState = connected ? 1 : -1;
+        connectionStateNotifier.notifyListeners();
+      }, onError: (e) {
+        printErrorMessage("Error occurred: $e");
+
+        setDialog(
+            "Error!", e.toString(), "Close", closeDialog, "", closeDialog, 1);
+        updateDialog();
+
+        connected = false;
+        connectionState = connected ? 1 : -1;
+        connectionStateNotifier.notifyListeners();
+      });
+      printMessage(
+          'Connected to: ${socket?.remoteAddress.address}:${socket?.remotePort}');
+      connected = true;
+      processing = false;
+    } on SocketException catch (e) {
+      rethrow;
+    } catch (e) {
       rethrow;
     }
   }
 
-  Future<void> sendData(String title, String data) async {
-    String jsonData = packageMaker(title, data);
+  Future<void> sendData(String jsonData) async {
+    if (processing) {
+      return;
+    }
+
     if (socket != null) {
+      processing = true;
+
       try {
-        socket?.write(jsonData);
-        await socket?.flush();
+        socket?.add(utf8.encode('$jsonData\n'));
         printMessage('Sent: $jsonData');
       } catch (e) {
         printErrorMessage('Error sending data: $e');
+        disconnect();
         rethrow;
       }
     } else {
@@ -99,13 +177,31 @@ class SocketClient {
     }
   }
 
+  Future<void> processData(response) async {
+    try {
+      Map<String, dynamic> jsonData = json.decode(utf8.decode(response));
+      printMessage(jsonData["title"]);
+
+      if (jsonData["title"] == "battery") {
+        processBatteryState(jsonData["data"].toString());
+      }
+      if (jsonData["title"] == "getControls") {
+        sendControllerData();
+      }
+    } catch (e) {
+      return;
+    }
+  }
+
   Future<void> disconnect() async {
     if (socket != null) {
       try {
-        await sendData("connection", "close");
         await socket?.close();
         socket = null;
+        connected = false;
         printMessage('Disconnected.');
+        connectionState = -1;
+        connectionStateNotifier.notifyListeners();
       } catch (e) {
         printErrorMessage('Error disconnecting: $e');
         setDialog("Error disconnecting!", e.toString(), "Ok", closeDialog, "",
