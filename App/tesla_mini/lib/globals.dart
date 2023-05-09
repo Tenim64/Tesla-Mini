@@ -235,6 +235,7 @@ void setDialog(title, content, btn1Content, btn1Function, btn2Content,
   dialogButtonCount = buttonCount;
 }
 
+bool dialogActive = false;
 void updateDialog() {
   dialogNotifier.value = 1;
 }
@@ -242,6 +243,7 @@ void updateDialog() {
 void closeDialog(context) {
   Navigator.of(context).pop();
   dialogNotifier.value = 0;
+  dialogActive = false;
 }
 
 final connectionStateNotifier = ValueNotifier<bool>(false);

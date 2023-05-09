@@ -126,7 +126,7 @@ class DialogState extends State<Dialog> {
                 child: ValueListenableBuilder(
                   valueListenable: globals.dialogNotifier,
                   builder: (context, value, child) {
-                    if (value != 0) {
+                    if (value != 0 && !globals.dialogActive) {
                       Future.delayed(const Duration(seconds: 0), () {
                         showDialog(
                             context: context,
@@ -135,7 +135,10 @@ class DialogState extends State<Dialog> {
                               return makeDialog(context);
                             });
                       });
+                      globals.dialogActive = true;
                     }
+                    printMessage(value);
+                    printMessage(globals.dialogActive);
                     return const SizedBox();
                   },
                 ),
