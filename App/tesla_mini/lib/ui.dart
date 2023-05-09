@@ -243,26 +243,30 @@ class HomePageState extends State<HomePage> {
                                         ),
                                       ),
                                     ),
-                                    Padding(
-                                      padding: const EdgeInsetsDirectional.only(
-                                          bottom: 4),
-                                      child: FittedBox(
-                                        fit: BoxFit.fitHeight,
-                                        child: IconButton(
-                                          icon: const FittedBox(
-                                            fit: BoxFit.fitHeight,
-                                            child: Opacity(
-                                              opacity: 0.3,
-                                              child: Icon(
-                                                Icons.edit_outlined,
-                                                color: Color(0xFF3E3E3E),
-                                                size: 100,
+                                    Opacity(
+                                      opacity: 0,
+                                      child: Padding(
+                                        padding:
+                                            const EdgeInsetsDirectional.only(
+                                                bottom: 4),
+                                        child: FittedBox(
+                                          fit: BoxFit.fitHeight,
+                                          child: IconButton(
+                                            icon: const FittedBox(
+                                              fit: BoxFit.fitHeight,
+                                              child: Opacity(
+                                                opacity: 0.3,
+                                                child: Icon(
+                                                  Icons.edit_outlined,
+                                                  color: Color(0xFF3E3E3E),
+                                                  size: 100,
+                                                ),
                                               ),
                                             ),
+                                            onPressed: () {
+                                              printMessage("*Edit name*");
+                                            },
                                           ),
-                                          onPressed: () {
-                                            printMessage("*Edit name*");
-                                          },
                                         ),
                                       ),
                                     ),
