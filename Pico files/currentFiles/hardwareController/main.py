@@ -51,6 +51,15 @@ def blink(blinks):
 
     
 # -------------------------------- Program --------------------------------
+smoothPercentage = 60
+def smoothValue(previousValue, newValue):
+    if abs(previousValue - newValue) < 20:
+        output = newValue
+    elif abs(previousValue - newValue) > 90:
+        output = newValue
+    else:
+        output = previousValue / 100 * smoothPercentage + newValue / 100 * (100 - smoothPercentage)
+        
 def processData(data):
     global uart, motorCurrentSpeed, motorCurrentDirection
                 
@@ -77,7 +86,7 @@ def processData(data):
                 direction = round(driveValue / 100)
                 motor_Drive(speed, direction)
             if ("turn" in data_data):
-                turnValue = int(data_data.split("turn=", 1)[1])
+                turnValue = smoothValue(servo_currentPosition_Percentage, int(data_data.split("turn=", 1)[1]))
                 servo_TurnPercentage(turnValue)
             if (data_data == "forwards"):
                 motorCurrentDirection = 1
