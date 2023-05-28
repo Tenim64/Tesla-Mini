@@ -9,7 +9,7 @@ servoPin = 1
 # Servo turn values
 servo_analogRange = 225       # [ 0 ; 360 ]
 servo_digitalRange = 180      # [ 0 ; servo_analogRange ]
-servo_analogOffset = 4       # [ 0 ; servo_digitalOffset ]
+servo_analogOffset = 4        # [ 0 ; servo_digitalOffset ]
 servo_digitalOffset = 45      # [ 0 ; servo_analogRange - servo_digitalRange ]
 servo_marginAngle = 50        # [ 0 ; actualRange / 2]
 
@@ -53,6 +53,7 @@ def servo_TurnPercentage(position_Percentage):
 
     # Convert position from degrees to analog data
     positionProcessed_Analog = servo_DegreesToAnalog(positionProcessed_Degrees)
+    
     # Turn
     servo_TurnAnalog(positionProcessed_Analog)
 
@@ -61,8 +62,11 @@ def servo_TurnPercentage(position_Percentage):
 # Turn function using analog data as input
 def servo_TurnAnalog(position_Analog):
     global servoPin
+    # Set servo pin to PWM mode
     servo = machine.PWM(machine.Pin(servoPin))
+    # Set PWM frequency
     servo.freq(50)
+    # Set "analog" value of servo pin
     servo.duty_u16(position_Analog)
 
 # --- User functions ---
