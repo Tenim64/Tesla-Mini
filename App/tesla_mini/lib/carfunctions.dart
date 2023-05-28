@@ -3,7 +3,6 @@
 import 'dart:core';
 import 'package:tesla_mini/globals.dart' as globals;
 import 'package:tesla_mini/debugger.dart';
-import 'package:tesla_mini/tcpserver.dart';
 
 Future<void> getCarState() async {
   await globals.socketClient.manualConnectionCheck();
@@ -34,8 +33,7 @@ void processBatteryState(response) {
 }
 
 void sendControllerData() {
-  globals.socketClient.sendData(globals.controlsPackageMaker(
-      globals.speed.toString(), globals.turnAngle.toString()));
+  globals.socketClient.sendData(globals.controlsPackageMaker(globals.speed.toString(), globals.turnAngle.toString()));
 }
 
 void setSpeed(int speed) {
