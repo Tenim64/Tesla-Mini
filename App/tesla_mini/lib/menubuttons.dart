@@ -5,14 +5,14 @@ import 'package:tesla_mini/otherfunctions.dart';
 // Button functions
 void toggleCameraButton(controller) async {
   if (controller.value.isStreamingImages) {
-    stopCamera(controller);
+    stopCamera();
   } else {
-    startCamera(controller);
+    startCamera();
   }
 }
 
 void focusButton(controller) {
-  focusCamera(controller);
+  focusCamera();
 }
 
 void restartButton() {

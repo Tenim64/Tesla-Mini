@@ -5,6 +5,7 @@ library tesla_mini.globals;
 
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:tesla_mini/debugger.dart';
 import 'package:tesla_mini/carfunctions.dart';
@@ -12,6 +13,7 @@ import 'dart:convert';
 import 'dart:async';
 
 var mainCamera;
+late CameraController cameraController;
 int currentPageIndex = 0;
 late Timer controllerTimer;
 int turnAngle = 0;
@@ -47,6 +49,7 @@ String controlsPackageMaker(String speed, String turnAngle) {
 bool isTCPServerActive = false;
 const tcpIpAddress = '192.168.4.1';
 const tcpPort = 80;
+bool controlsActive = false;
 
 Socket? socketTCP;
 Future<void> connectSocket() async {
@@ -186,7 +189,11 @@ class SocketClient {
         processBatteryState(jsonData["data"].toString());
       }
       if (jsonData["title"] == "getControls") {
-        sendControllerData();
+        if (controlsActive) {
+          sendControllerData();
+        } else {
+          socketClient.sendData(controlsPackageMaker("cancel", "cancel"));
+        }
       }
     } catch (e) {
       return;

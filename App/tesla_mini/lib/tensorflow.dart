@@ -3,6 +3,8 @@
 
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'package:tesla_mini/camerafunctions.dart';
+import 'package:tesla_mini/carfunctions.dart';
 import 'package:tesla_mini/tcpserver.dart';
 import 'globals.dart' as globals;
 import 'package:tesla_mini/debugger.dart';
@@ -54,7 +56,11 @@ Future<void> tfProcessFrame(imagelib.Image rawImage) async {
   /// Pre-process the image
   TensorImage getProcessedImage(TensorImage inputImage) {
     int padSize = max(inputImage.height, inputImage.width);
-    ImageProcessor imageProcessor = ImageProcessorBuilder().add(ResizeWithCropOrPadOp(padSize, padSize)).add(ResizeOp(inputTensor.shape[1], inputTensor.shape[2], ResizeMethod.BILINEAR)).build();
+    ImageProcessor imageProcessor = ImageProcessorBuilder()
+        .add(ResizeWithCropOrPadOp(padSize, padSize))
+        .add(ResizeOp(
+            inputTensor.shape[1], inputTensor.shape[2], ResizeMethod.BILINEAR))
+        .build();
     inputImage = imageProcessor.process(inputImage);
     return inputImage;
   }
@@ -86,7 +92,13 @@ Future<void> tfProcessFrame(imagelib.Image rawImage) async {
   printMessage("(2.2) Output ready");
 
   // ---- Run model
-  globals.interpreter.runForMultipleInputs([inputImage.buffer], outputs);
+  try {
+    globals.interpreter.runForMultipleInputs([inputImage.buffer], outputs);
+  } catch (e) {
+    printErrorMessage(e);
+    stopCamera();
+    return;
+  }
   printMessage("(2.3) Model ran");
 
   // ---- Set recognitions
@@ -104,22 +116,38 @@ Future<void> tfProcessFrame(imagelib.Image rawImage) async {
   */
   await globals.updateRecognitions(recognitions);
 
-  // ---- Send data
-  if (outputCount.getIntValue(0) > 0) {
-    for (var i = 0; i < outputCount.getIntValue(0); i++) {
-      if (outputScores.getDoubleValue(i) * 100 > detectionThreshold) {
-        sendDataTCP("recognition", globals.labels.elementAt(outputClasses.getIntValue(i)));
-      }
-    }
-  }
-
   // Print
   printTitle("(3) Tensorflow processed");
   if (outputCount.getIntValue(0) > 0) {
     printTitle("(4) Detected objects:");
     for (var i = 0; i < outputCount.getIntValue(0); i++) {
       if (outputScores.getDoubleValue(i) * 100 > detectionThreshold) {
-        printMessage("${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
+        printMessage(
+            "${globals.labels.elementAt(outputClasses.getIntValue(i))} | ${outputScores.getDoubleValue(i) * 100}%");
+        switch (globals.labels.elementAt(outputClasses.getIntValue(i))) {
+          case "bord: linkse bocht":
+            globals.turnAngle = -100;
+            break;
+          case "bord: verplicht rechtdoor":
+            globals.turnAngle = 0;
+            break;
+          case "bord: rechtse bocht":
+            globals.turnAngle = -100;
+            break;
+          case "bord: stop":
+            globals.speed = 0;
+            break;
+          case "bord: max 70km/u":
+            globals.speed = 100;
+            break;
+          default:
+            break;
+        }
+        try {
+          sendControllerData();
+        } catch (e) {
+          stopCamera();
+        }
       }
     }
   }
@@ -145,9 +173,6 @@ List<Widget> displayBoxesAroundRecognizedObjects(Size screen) {
     location["width"] = rawLocations[i + 2];
     location["height"] = rawLocations[i + 3];
     locations.add(location);
-    if (i == 0) {
-      printMessage("location at: (${location["x"]}, ${location["y"]}) width:${location["width"]}, height:${location["height"]}");
-    }
   }
   printMessage("(5.2) Locations ready");
 

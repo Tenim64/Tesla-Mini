@@ -13,6 +13,7 @@ import 'package:tesla_mini/globals.dart' as globals;
 import 'package:tesla_mini/tcpserver.dart';
 import 'package:tesla_mini/carfunctions.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:tesla_mini/camerafunctions.dart';
 import 'dart:math' as math;
 
 // ---------- Extra
@@ -137,8 +138,6 @@ class DialogState extends State<Dialog> {
                       });
                       globals.dialogActive = true;
                     }
-                    printMessage(value);
-                    printMessage(globals.dialogActive);
                     return const SizedBox();
                   },
                 ),
@@ -931,7 +930,6 @@ class CameraPage extends StatefulWidget {
 }
 
 class CameraPageState extends State<CameraPage> {
-  late CameraController controller;
   late Future<void> initializeControllerFuture;
 
   @override
@@ -939,7 +937,7 @@ class CameraPageState extends State<CameraPage> {
     super.initState();
     // To display the current output from the Camera,
     // create a CameraController.
-    controller = CameraController(
+    globals.cameraController = CameraController(
       // Get a specific camera from the list of available cameras.
       widget.camera,
       // Define the resolution to use.
@@ -951,7 +949,7 @@ class CameraPageState extends State<CameraPage> {
     );
 
     // Next, initialize the controller. This returns a Future.
-    initializeControllerFuture = controller.initialize();
+    initializeControllerFuture = globals.cameraController.initialize();
 
     // Load Tensorflow models
     tfLoadModel('Android');
@@ -962,8 +960,8 @@ class CameraPageState extends State<CameraPage> {
     // Dispose app
     super.dispose();
     // Dispose of the controller when the widget is disposed.
-    controller.stopImageStream();
-    controller.dispose();
+    globals.cameraController.stopImageStream();
+    globals.cameraController.dispose();
   }
 
   @override
@@ -972,85 +970,53 @@ class CameraPageState extends State<CameraPage> {
     GlobalKey cameraPreviewWrapper = GlobalKey();
 
     return Scaffold(
-      appBar: AppBar(
-        title: Row(
-          children: [
-            TextButton(
-                onPressed: () {
-                  toggleCameraButton(controller);
-                  setState(() {});
-                },
-                child: recognitionsNotifier.value.isOdd
-                    ? const Text('Stop')
-                    : const Text('Start')),
-            TextButton(
-                onPressed: () {
-                  focusButton(controller);
-                },
-                child: const Text(
-                  'Focus',
-                )),
-            TextButton(
-                onPressed: () {
-                  testTCP();
-                },
-                child: const Text('Test TCP')),
-            TextButton(
-                onPressed: () {
-                  restartButton();
-                },
-                child: const Text(
-                  'Restart',
-                )),
-          ],
-        ),
-        titleSpacing: 5,
-        toolbarHeight: 40.0,
-      ),
       body: FutureBuilder<void>(
         future: initializeControllerFuture,
         builder: (context, snapshot) {
-          return Stack(
-            children: [
-              (() {
-                return Dialog();
-              }()),
-              (() {
-                if (snapshot.connectionState == ConnectionState.done) {
-                  // If the Future is complete, display the preview.
-                  return Stack(children: [
-                    Center(
-                      child: SizedBox(
-                          key: cameraPreviewWrapper,
-                          height: double.infinity,
-                          width: double.infinity,
-                          child: CameraPreview(controller)),
-                    ),
-                    ValueListenableBuilder(
-                        valueListenable: recognitionsNotifier,
-                        builder: (context, value, widget) {
-                          final keyContext =
-                              cameraPreviewWrapper.currentContext;
-                          final box =
-                              keyContext!.findRenderObject() as RenderBox;
-                          if (value != 0) {
-                            final boxes = displayBoxesAroundRecognizedObjects(
-                                box.hasSize ? box.size : size);
-                            isProcessing = false;
-                            return Stack(
-                              children: boxes,
-                            );
-                          } else {
-                            return Stack();
-                          }
-                        }),
-                  ]);
-                } else {
-                  // Otherwise, display a loading indicator.
-                  return const Center(child: CircularProgressIndicator());
-                }
-              }()),
-            ],
+          focusCamera();
+          startCamera();
+          return SafeArea(
+            child: Stack(
+              children: [
+                (() {
+                  if (snapshot.connectionState == ConnectionState.done) {
+                    // If the Future is complete, display the preview.
+                    return Stack(children: [
+                      Center(
+                        child: SizedBox(
+                            key: cameraPreviewWrapper,
+                            height: double.infinity,
+                            width: double.infinity,
+                            child: CameraPreview(globals.cameraController)),
+                      ),
+                      ValueListenableBuilder(
+                          valueListenable: recognitionsNotifier,
+                          builder: (context, value, widget) {
+                            final keyContext =
+                                cameraPreviewWrapper.currentContext;
+                            final box =
+                                keyContext!.findRenderObject() as RenderBox;
+                            if (value != 0) {
+                              final boxes = displayBoxesAroundRecognizedObjects(
+                                  box.hasSize ? box.size : size);
+                              isProcessing = false;
+                              return Stack(
+                                children: boxes,
+                              );
+                            } else {
+                              return Stack();
+                            }
+                          }),
+                    ]);
+                  } else {
+                    // Otherwise, display a loading indicator.
+                    return const Center(child: CircularProgressIndicator());
+                  }
+                }()),
+                navbar(context),
+                Dialog(),
+              ],
+            ),
           );
         },
       ),
@@ -1062,7 +1028,17 @@ Widget navbarItem(IconData icon, int index, dynamic context) {
   return Expanded(
     child: GestureDetector(
       onTap: () async {
+        if (globals.currentPageIndex == 2) {
+          stopCamera();
+        }
+
         globals.currentPageIndex = index;
+
+        if (index == 2 || index == 1) {
+          globals.controlsActive = true;
+        } else {
+          globals.controlsActive = false;
+        }
 
         Navigator.push(
             context,

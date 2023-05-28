@@ -12,21 +12,21 @@ import 'package:flutter/foundation.dart';
 import 'package:tesla_mini/imageconverter.dart';
 
 // Process a single image
-void focusCamera(CameraController controller) async {
+void focusCamera() async {
   printMessage('Focusing');
-  controller.setFocusMode(FocusMode.auto);
+  globals.cameraController.setFocusMode(FocusMode.auto);
 }
 
 // Start image stream
-void startCamera(CameraController controller) {
+void startCamera() {
   printMessage('Starting'); // Print in debug console
-  controller.setFlashMode(FlashMode.off); // Disable camera flash
+  globals.cameraController.setFlashMode(FlashMode.off); // Disable camera flash
 
   recognitionsNotifier.value = 1;
 
   try {
     // Start image stream
-    controller.startImageStream((CameraImage image) {
+    globals.cameraController.startImageStream((CameraImage image) {
       processImage(image); // Process new image
     });
   } catch (err) {
@@ -37,13 +37,13 @@ void startCamera(CameraController controller) {
 }
 
 // Stop image stream
-void stopCamera(CameraController controller) {
+void stopCamera() {
   printMessage('Stopping'); // Print in debug console
 
   recognitionsNotifier.value = 0;
 
   try {
-    controller.stopImageStream(); // Stop image stream
+    globals.cameraController.stopImageStream(); // Stop image stream
   } catch (err) {
     printMessage('Wasn\'t running');
   }
