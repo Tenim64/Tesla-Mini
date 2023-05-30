@@ -48,6 +48,7 @@ void stopCamera() {
     printMessage('Wasn\'t running');
   }
 
+  globals.controlsActive = false;
   sendDataTCP('state', 'Stopping'); // Send signal to http server
 }
 
