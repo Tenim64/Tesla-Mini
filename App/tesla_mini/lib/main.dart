@@ -24,15 +24,19 @@ Future<void> main() async {
 
   Wakelock.enable();
 
-  // Obtain a list of the available cameras on the device.
-  final cameras = await availableCameras();
+  try {
+    // Obtain a list of the available cameras on the device.
+    final cameras = await availableCameras();
 
-  // Get a specific camera from the list of available cameras.
-  globals.mainCamera = cameras.first;
-
+    // Get a specific camera from the list of available cameras.
+    globals.mainCamera = cameras.first;
+  } catch (e) {
+    printErrorMessage(e);
+  }
   // App
   runApp(
     MaterialApp(
+      debugShowCheckedModeBanner: false,
       theme: ThemeData.light().copyWith(
           sliderTheme: ThemeData.light().sliderTheme.copyWith(
               thumbColor: const Color(0xFF7A7A7A),

@@ -22,7 +22,7 @@ void startCamera() {
   printMessage('Starting'); // Print in debug console
   globals.cameraController.setFlashMode(FlashMode.off); // Disable camera flash
 
-  recognitionsNotifier.value = 1;
+  globals.recognitionsNotifier.value = 1;
 
   try {
     // Start image stream
@@ -32,8 +32,6 @@ void startCamera() {
   } catch (err) {
     printMessage('Already running');
   }
-
-  sendDataTCP('state', 'Starting'); // Send signal to http server
 }
 
 // Stop image stream
@@ -49,7 +47,6 @@ void stopCamera() {
   }
 
   globals.controlsActive = false;
-  sendDataTCP('state', 'Stopping'); // Send signal to http server
 }
 
 void processImage(CameraImage image) async {
@@ -62,12 +59,13 @@ void processImage(CameraImage image) async {
 
   printMessage("1) New image: ${DateTime.now()}"); // Print in debug console
 
-  // Tensorflow
+  // Process the frame with Tensorflow
   try {
+    // Also, convert the image to the right type
     await tfProcessFrame(ImageUtils.convertYUV420ToImage(image));
   } catch (e) {
     printErrorMessage(e);
-    exit(0);
+    stopCamera();
   }
 }
 
@@ -75,9 +73,7 @@ void sendFrame(photo) async {
   printMessage("Uploading image"); // Print in debug console
 
   // Convert Camera image to image
-  img.Image image = img.Image.fromBytes(
-      photo.width, photo.height, photo.planes[0].bytes,
-      format: img.Format.bgra);
+  img.Image image = img.Image.fromBytes(photo.width, photo.height, photo.planes[0].bytes, format: img.Format.bgra);
 
   // Convert image to jpeg
   Uint8List jpeg = Uint8List.fromList(img.encodeJpg(image));

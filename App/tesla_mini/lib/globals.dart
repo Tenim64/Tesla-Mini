@@ -1,10 +1,9 @@
-// ignore_for_file: prefer_typing_uninitialized_variables, invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member, empty_catches
+// ignore_for_file: prefer_typing_uninitialized_variables, invalid_use_of_protected_member, invalid_use_of_visible_for_testing_member, empty_catches, unused_catch_clause
 
 // Packages
 library tesla_mini.globals;
 
 import 'dart:io';
-import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:tesla_mini/debugger.dart';
@@ -42,8 +41,7 @@ String packageMaker(String title, String data) {
 }
 
 String controlsPackageMaker(String speed, String turnAngle) {
-  return json
-      .encode({'title': 'control', 'speed': speed, 'turnAngle': turnAngle});
+  return json.encode({'title': 'control', 'speed': speed, 'turnAngle': turnAngle});
 }
 
 bool isTCPServerActive = false;
@@ -54,17 +52,14 @@ bool controlsActive = false;
 Socket? socketTCP;
 Future<void> connectSocket() async {
   try {
-    Socket socket = await Socket.connect(tcpIpAddress, tcpPort,
-            timeout: const Duration(milliseconds: 3000))
-        .catchError(
+    Socket socket = await Socket.connect(tcpIpAddress, tcpPort, timeout: const Duration(milliseconds: 3000)).catchError(
       (e) {
         isTCPServerActive = false;
         socketTCP = null;
 
         printErrorMessage("Error occurred: $e");
 
-        setDialog(
-            "Error!", e.toString(), "Close", closeDialog, "", closeDialog, 1);
+        setDialog("Error!", e.toString(), "Close", closeDialog, "", closeDialog, 1);
         updateDialog();
 
         throw e;
@@ -101,6 +96,7 @@ class SocketClient {
   Future<void> manualConnectionCheck() async {
     connectionState = 0;
     connectionStateNotifier.notifyListeners();
+    // ignore: unused_local_variable
     Timer timeoutTimer = Timer(const Duration(seconds: 2), () {
       connectionState = connected ? 1 : -1;
       connectionStateNotifier.notifyListeners();
@@ -118,16 +114,14 @@ class SocketClient {
       connectionState = -1;
       connectionStateNotifier.notifyListeners();
       printErrorMessage('Error connecting: $e');
-      setDialog("Error connecting!", e.toString(), "Ok", closeDialog, "",
-          closeDialog, 1);
+      setDialog("Error connecting!", e.toString(), "Ok", closeDialog, "", closeDialog, 1);
       updateDialog();
     }
   }
 
   Future<void> connect() async {
     try {
-      socket = await Socket.connect(tcpIpAddress, tcpPort,
-          timeout: const Duration(milliseconds: 1000));
+      socket = await Socket.connect(tcpIpAddress, tcpPort, timeout: const Duration(milliseconds: 1000));
       socket?.listen((data) {
         printMessage("Received: ${String.fromCharCodes(data).trim()}");
         processing = false;
@@ -140,16 +134,14 @@ class SocketClient {
       }, onError: (e) {
         printErrorMessage("Error occurred: $e");
 
-        setDialog(
-            "Error!", e.toString(), "Close", closeDialog, "", closeDialog, 1);
+        setDialog("Error!", e.toString(), "Close", closeDialog, "", closeDialog, 1);
         updateDialog();
 
         connected = false;
         connectionState = connected ? 1 : -1;
         connectionStateNotifier.notifyListeners();
       });
-      printMessage(
-          'Connected to: ${socket?.remoteAddress.address}:${socket?.remotePort}');
+      printMessage('Connected to: ${socket?.remoteAddress.address}:${socket?.remotePort}');
       connected = true;
       processing = false;
     } on SocketException catch (e) {
@@ -211,8 +203,7 @@ class SocketClient {
         connectionStateNotifier.notifyListeners();
       } catch (e) {
         printErrorMessage('Error disconnecting: $e');
-        setDialog("Error disconnecting!", e.toString(), "Ok", closeDialog, "",
-            closeDialog, 1);
+        setDialog("Error disconnecting!", e.toString(), "Ok", closeDialog, "", closeDialog, 1);
         updateDialog();
       }
     } else {
@@ -224,15 +215,11 @@ class SocketClient {
 // Dialog
 final dialogNotifier = ValueNotifier<int>(0);
 
-String dialogTitle = "Title",
-    dialogContent = "Content",
-    dialogBtn1Content = "Cancel",
-    dialogBtn2Content = "Ok";
+String dialogTitle = "Title", dialogContent = "Content", dialogBtn1Content = "Cancel", dialogBtn2Content = "Ok";
 int dialogButtonCount = 2;
 Function dialogBtn1Function = () {}, dialogBtn2Function = () {};
 
-void setDialog(title, content, btn1Content, btn1Function, btn2Content,
-    btn2Function, buttonCount) {
+void setDialog(title, content, btn1Content, btn1Function, btn2Content, btn2Function, buttonCount) {
   dialogTitle = title;
   dialogContent = content;
   dialogBtn1Content = btn1Content;
