@@ -7,33 +7,27 @@ import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
 import 'package:tesla_mini/debugger.dart';
 import 'package:tesla_mini/globals.dart';
-import 'package:tesla_mini/menubuttons.dart';
 import 'package:tesla_mini/tensorflow.dart';
 import 'package:tesla_mini/globals.dart' as globals;
-import 'package:tesla_mini/tcpserver.dart';
 import 'package:tesla_mini/carfunctions.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:tesla_mini/camerafunctions.dart';
 import 'dart:math' as math;
 
 // ---------- Extra
-final List<Widget> pages = [
-  const HomePage(),
-  const ControllerPage(),
-  CameraPage(camera: globals.mainCamera)
-];
+final List<Widget> pages = [const HomePage(), const ControllerPage(), CameraPage()];
 
 // ---------- Widgets
 String welcomeText() {
   final currentHour = DateTime.now().hour;
-  if (currentHour < 6) {
+  if (currentHour > 18) {
     return "Good evening!";
   }
-  if (currentHour < 12) {
-    return "Good morning!";
-  }
-  if (currentHour < 18) {
+  if (currentHour > 12) {
     return "Good afternoon!";
+  }
+  if (currentHour > 5) {
+    return "Good morning!";
   }
   return "Good evening!";
 }
@@ -66,8 +60,7 @@ class JoystickState extends State<Joystick> {
   Widget build(BuildContext context) {
     return Expanded(
       child: Padding(
-        padding: EdgeInsetsDirectional.all(
-            MediaQuery.of(context).size.aspectRatio * 50),
+        padding: EdgeInsetsDirectional.all(MediaQuery.of(context).size.aspectRatio * 50),
         child: Container(
           decoration: BoxDecoration(
             color: const Color(0xFFC8C8C8),
@@ -179,25 +172,20 @@ class HomePageState extends State<HomePage> {
                         SizedBox(
                           width: double.infinity,
                           child: Padding(
-                            padding: const EdgeInsetsDirectional.only(
-                                top: 0, end: 32),
+                            padding: const EdgeInsetsDirectional.only(top: 0, end: 32),
                             child: FittedBox(
                                 fit: BoxFit.fitWidth,
                                 child: Text(
                                   welcomeText(),
                                   textAlign: TextAlign.start,
-                                  style: const TextStyle(
-                                      fontSize: 100,
-                                      fontWeight: FontWeight.bold),
+                                  style: const TextStyle(fontSize: 100, fontWeight: FontWeight.bold),
                                 )),
                           ),
                         ),
                         SizedBox(
                           width: double.infinity,
                           child: Padding(
-                            padding: EdgeInsetsDirectional.only(
-                                start: 4,
-                                end: MediaQuery.of(context).size.width * 0.24),
+                            padding: EdgeInsetsDirectional.only(start: 4, end: MediaQuery.of(context).size.width * 0.24),
                             child: const FittedBox(
                                 fit: BoxFit.fitWidth,
                                 child: Text(
@@ -224,8 +212,7 @@ class HomePageState extends State<HomePage> {
                           child: Column(
                             children: [
                               Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    24, 4, 0, 0),
+                                padding: const EdgeInsetsDirectional.fromSTEB(24, 4, 0, 0),
                                 child: Row(
                                   children: [
                                     Flexible(
@@ -234,10 +221,7 @@ class HomePageState extends State<HomePage> {
                                         child: Text(
                                           globals.carName,
                                           style: TextStyle(
-                                            fontSize: MediaQuery.of(context)
-                                                    .size
-                                                    .width *
-                                                0.075,
+                                            fontSize: MediaQuery.of(context).size.width * 0.075,
                                             fontWeight: FontWeight.bold,
                                             height: 0,
                                             color: const Color(0xFF3E3E3E),
@@ -248,9 +232,7 @@ class HomePageState extends State<HomePage> {
                                     Opacity(
                                       opacity: 0,
                                       child: Padding(
-                                        padding:
-                                            const EdgeInsetsDirectional.only(
-                                                bottom: 4),
+                                        padding: const EdgeInsetsDirectional.only(bottom: 4),
                                         child: FittedBox(
                                           fit: BoxFit.fitHeight,
                                           child: IconButton(
@@ -280,33 +262,27 @@ class HomePageState extends State<HomePage> {
                                 height: 0,
                               ),
                               Padding(
-                                padding: const EdgeInsetsDirectional.fromSTEB(
-                                    16, 4, 16, 16),
+                                padding: const EdgeInsetsDirectional.fromSTEB(16, 4, 16, 16),
                                 child: Row(
                                   children: [
                                     ValueListenableBuilder(
-                                        valueListenable:
-                                            globals.connectionStateNotifier,
+                                        valueListenable: globals.connectionStateNotifier,
                                         builder: (context, value, child) {
                                           return Expanded(
                                               child: Column(children: [
                                             const AspectRatio(
                                               aspectRatio: 6 / 1,
                                               child: Align(
-                                                alignment:
-                                                    AlignmentDirectional.center,
+                                                alignment: AlignmentDirectional.center,
                                                 child: Padding(
-                                                  padding: EdgeInsetsDirectional
-                                                      .only(top: 8, bottom: 2),
+                                                  padding: EdgeInsetsDirectional.only(top: 8, bottom: 2),
                                                   child: FittedBox(
                                                     fit: BoxFit.fitHeight,
                                                     child: Text(
                                                       'Connection:',
-                                                      textAlign:
-                                                          TextAlign.center,
+                                                      textAlign: TextAlign.center,
                                                       style: TextStyle(
-                                                        color:
-                                                            Color(0xFF808080),
+                                                        color: Color(0xFF808080),
                                                         fontSize: 100,
                                                         height: 1,
                                                       ),
@@ -321,93 +297,56 @@ class HomePageState extends State<HomePage> {
                                               },
                                               child: Container(
                                                 decoration: BoxDecoration(
-                                                  borderRadius:
-                                                      BorderRadius.circular(24),
+                                                  borderRadius: BorderRadius.circular(24),
                                                   shape: BoxShape.rectangle,
-                                                  color: const Color.fromARGB(
-                                                      255, 200, 200, 200),
+                                                  color: const Color.fromARGB(255, 200, 200, 200),
                                                 ),
                                                 child: Padding(
-                                                  padding:
-                                                      const EdgeInsetsDirectional
-                                                          .all(12),
+                                                  padding: const EdgeInsetsDirectional.all(12),
                                                   child: Column(children: [
                                                     AspectRatio(
                                                       aspectRatio: 1 / 1,
                                                       child: Container(
-                                                        decoration:
-                                                            BoxDecoration(
-                                                          borderRadius:
-                                                              BorderRadius
-                                                                  .circular(20),
-                                                          shape: BoxShape
-                                                              .rectangle,
-                                                          color: const Color
-                                                                  .fromARGB(255,
-                                                              242, 242, 242),
+                                                        decoration: BoxDecoration(
+                                                          borderRadius: BorderRadius.circular(20),
+                                                          shape: BoxShape.rectangle,
+                                                          color: const Color.fromARGB(255, 242, 242, 242),
                                                         ),
                                                         child: Padding(
-                                                          padding:
-                                                              const EdgeInsetsDirectional
-                                                                  .all(20),
-                                                          child:
-                                                              Stack(children: [
-                                                            if (globals
-                                                                    .connectionState ==
-                                                                -1)
+                                                          padding: const EdgeInsetsDirectional.all(20),
+                                                          child: Stack(children: [
+                                                            if (globals.connectionState == -1)
                                                               const Align(
-                                                                alignment:
-                                                                    AlignmentDirectional(
-                                                                        0, 0),
-                                                                child:
-                                                                    FittedBox(
-                                                                  fit: BoxFit
-                                                                      .fill,
+                                                                alignment: AlignmentDirectional(0, 0),
+                                                                child: FittedBox(
+                                                                  fit: BoxFit.fill,
                                                                   child: FaIcon(
-                                                                    FontAwesomeIcons
-                                                                        .xmark,
-                                                                    color: Color(
-                                                                        0xFFE30000),
+                                                                    FontAwesomeIcons.xmark,
+                                                                    color: Color(0xFFE30000),
                                                                     size: 500,
                                                                   ),
                                                                 ),
                                                               ),
-                                                            if (globals
-                                                                    .connectionState ==
-                                                                0)
+                                                            if (globals.connectionState == 0)
                                                               const Align(
-                                                                alignment:
-                                                                    AlignmentDirectional(
-                                                                        0, 0),
-                                                                child:
-                                                                    FittedBox(
-                                                                  fit: BoxFit
-                                                                      .fill,
+                                                                alignment: AlignmentDirectional(0, 0),
+                                                                child: FittedBox(
+                                                                  fit: BoxFit.fill,
                                                                   child: FaIcon(
-                                                                    FontAwesomeIcons
-                                                                        .wifi,
-                                                                    color: Color(
-                                                                        0xFFFFB800),
+                                                                    FontAwesomeIcons.wifi,
+                                                                    color: Color(0xFFFFB800),
                                                                     size: 500,
                                                                   ),
                                                                 ),
                                                               ),
-                                                            if (globals
-                                                                    .connectionState ==
-                                                                1)
+                                                            if (globals.connectionState == 1)
                                                               const Align(
-                                                                alignment:
-                                                                    AlignmentDirectional(
-                                                                        0, 0),
-                                                                child:
-                                                                    FittedBox(
-                                                                  fit: BoxFit
-                                                                      .fill,
+                                                                alignment: AlignmentDirectional(0, 0),
+                                                                child: FittedBox(
+                                                                  fit: BoxFit.fill,
                                                                   child: FaIcon(
-                                                                    FontAwesomeIcons
-                                                                        .check,
-                                                                    color: Color(
-                                                                        0xFF2060F2),
+                                                                    FontAwesomeIcons.check,
+                                                                    color: Color(0xFF2060F2),
                                                                     size: 500,
                                                                   ),
                                                                 ),
@@ -417,98 +356,52 @@ class HomePageState extends State<HomePage> {
                                                       ),
                                                     ),
                                                     Padding(
-                                                      padding:
-                                                          const EdgeInsetsDirectional
-                                                              .only(top: 8),
+                                                      padding: const EdgeInsetsDirectional.only(top: 8),
                                                       child: AspectRatio(
                                                         aspectRatio: 16 / 5,
                                                         child: Container(
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20),
-                                                            shape: BoxShape
-                                                                .rectangle,
-                                                            color: const Color
-                                                                    .fromARGB(
-                                                                255,
-                                                                242,
-                                                                242,
-                                                                242),
+                                                          decoration: BoxDecoration(
+                                                            borderRadius: BorderRadius.circular(20),
+                                                            shape: BoxShape.rectangle,
+                                                            color: const Color.fromARGB(255, 242, 242, 242),
                                                           ),
                                                           child: Padding(
-                                                            padding:
-                                                                const EdgeInsetsDirectional
-                                                                        .fromSTEB(
-                                                                    16,
-                                                                    7,
-                                                                    16,
-                                                                    7),
+                                                            padding: const EdgeInsetsDirectional.fromSTEB(16, 7, 16, 7),
                                                             child: FittedBox(
-                                                              fit: BoxFit
-                                                                  .scaleDown,
+                                                              fit: BoxFit.scaleDown,
                                                               child: Stack(
                                                                 children: [
-                                                                  if (globals
-                                                                          .connectionState ==
-                                                                      -1)
+                                                                  if (globals.connectionState == -1)
                                                                     const Text(
                                                                       'Disconnected',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .center,
-                                                                      style:
-                                                                          TextStyle(
-                                                                        color: Color(
-                                                                            0xFFE30000),
-                                                                        fontSize:
-                                                                            100,
-                                                                        fontWeight:
-                                                                            FontWeight.bold,
-                                                                        height:
-                                                                            1.25,
+                                                                      textAlign: TextAlign.center,
+                                                                      style: TextStyle(
+                                                                        color: Color(0xFFE30000),
+                                                                        fontSize: 100,
+                                                                        fontWeight: FontWeight.bold,
+                                                                        height: 1.25,
                                                                       ),
                                                                     ),
-                                                                  if (globals
-                                                                          .connectionState ==
-                                                                      0)
+                                                                  if (globals.connectionState == 0)
                                                                     const Text(
                                                                       'Connecting',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .center,
-                                                                      style:
-                                                                          TextStyle(
-                                                                        color: Color(
-                                                                            0xFFFFB800),
-                                                                        fontSize:
-                                                                            100,
-                                                                        fontWeight:
-                                                                            FontWeight.bold,
-                                                                        height:
-                                                                            1.25,
+                                                                      textAlign: TextAlign.center,
+                                                                      style: TextStyle(
+                                                                        color: Color(0xFFFFB800),
+                                                                        fontSize: 100,
+                                                                        fontWeight: FontWeight.bold,
+                                                                        height: 1.25,
                                                                       ),
                                                                     ),
-                                                                  if (globals
-                                                                          .connectionState ==
-                                                                      1)
+                                                                  if (globals.connectionState == 1)
                                                                     const Text(
                                                                       'Connected',
-                                                                      textAlign:
-                                                                          TextAlign
-                                                                              .center,
-                                                                      style:
-                                                                          TextStyle(
-                                                                        color: Color(
-                                                                            0xFF2060F2),
-                                                                        fontSize:
-                                                                            100,
-                                                                        fontWeight:
-                                                                            FontWeight.bold,
-                                                                        height:
-                                                                            1.25,
+                                                                      textAlign: TextAlign.center,
+                                                                      style: TextStyle(
+                                                                        color: Color(0xFF2060F2),
+                                                                        fontSize: 100,
+                                                                        fontWeight: FontWeight.bold,
+                                                                        height: 1.25,
                                                                       ),
                                                                     ),
                                                                 ],
@@ -526,36 +419,26 @@ class HomePageState extends State<HomePage> {
                                         }),
                                     const VerticalDivider(width: 16),
                                     ValueListenableBuilder(
-                                      valueListenable:
-                                          globals.connectionStateNotifier,
+                                      valueListenable: globals.connectionStateNotifier,
                                       builder: (context, value, child) {
                                         return ValueListenableBuilder(
-                                          valueListenable:
-                                              globals.batteryStateNotifier,
+                                          valueListenable: globals.batteryStateNotifier,
                                           builder: (context, value, child) {
                                             return Expanded(
                                                 child: Column(children: [
                                               const AspectRatio(
                                                 aspectRatio: 6 / 1,
                                                 child: Align(
-                                                  alignment:
-                                                      AlignmentDirectional
-                                                          .center,
+                                                  alignment: AlignmentDirectional.center,
                                                   child: Padding(
-                                                    padding:
-                                                        EdgeInsetsDirectional
-                                                            .only(
-                                                                top: 8,
-                                                                bottom: 2),
+                                                    padding: EdgeInsetsDirectional.only(top: 8, bottom: 2),
                                                     child: FittedBox(
                                                       fit: BoxFit.fitHeight,
                                                       child: Text(
                                                         'Battery:',
-                                                        textAlign:
-                                                            TextAlign.center,
+                                                        textAlign: TextAlign.center,
                                                         style: TextStyle(
-                                                          color:
-                                                              Color(0xFF808080),
+                                                          color: Color(0xFF808080),
                                                           fontSize: 100,
                                                           height: 1,
                                                         ),
@@ -570,225 +453,135 @@ class HomePageState extends State<HomePage> {
                                                 },
                                                 child: Container(
                                                   decoration: BoxDecoration(
-                                                    borderRadius:
-                                                        BorderRadius.circular(
-                                                            24),
+                                                    borderRadius: BorderRadius.circular(24),
                                                     shape: BoxShape.rectangle,
-                                                    color: const Color.fromARGB(
-                                                        255, 200, 200, 200),
+                                                    color: const Color.fromARGB(255, 200, 200, 200),
                                                   ),
                                                   child: Padding(
-                                                    padding:
-                                                        const EdgeInsetsDirectional
-                                                            .all(12),
+                                                    padding: const EdgeInsetsDirectional.all(12),
                                                     child: Column(children: [
                                                       AspectRatio(
                                                         aspectRatio: 1 / 1,
                                                         child: Container(
-                                                          decoration:
-                                                              BoxDecoration(
-                                                            borderRadius:
-                                                                BorderRadius
-                                                                    .circular(
-                                                                        20),
-                                                            shape: BoxShape
-                                                                .rectangle,
-                                                            color: const Color(
-                                                                0xFFF2F2F2),
+                                                          decoration: BoxDecoration(
+                                                            borderRadius: BorderRadius.circular(20),
+                                                            shape: BoxShape.rectangle,
+                                                            color: const Color(0xFFF2F2F2),
                                                           ),
                                                           child: Padding(
-                                                            padding:
-                                                                const EdgeInsetsDirectional
-                                                                    .all(20),
-                                                            child: Stack(
-                                                                children: [
-                                                                  if (globals.connectionState ==
-                                                                          -1 ||
-                                                                      globals.connectionState ==
-                                                                          0) ...[
-                                                                    const Align(
-                                                                      alignment:
-                                                                          AlignmentDirectional(
-                                                                              0,
-                                                                              0),
-                                                                      child:
-                                                                          FittedBox(
-                                                                        fit: BoxFit
-                                                                            .fill,
-                                                                        child:
-                                                                            FaIcon(
-                                                                          FontAwesomeIcons
-                                                                              .question,
-                                                                          color:
-                                                                              Color(0xFFE30000),
-                                                                          size:
-                                                                              500,
-                                                                        ),
+                                                            padding: const EdgeInsetsDirectional.all(20),
+                                                            child: Stack(children: [
+                                                              if (globals.connectionState == -1 || globals.connectionState == 0) ...[
+                                                                const Align(
+                                                                  alignment: AlignmentDirectional(0, 0),
+                                                                  child: FittedBox(
+                                                                    fit: BoxFit.fill,
+                                                                    child: FaIcon(
+                                                                      FontAwesomeIcons.question,
+                                                                      color: Color(0xFFE30000),
+                                                                      size: 500,
+                                                                    ),
+                                                                  ),
+                                                                ),
+                                                              ] else ...[
+                                                                if (globals.batteryState == -1)
+                                                                  const Align(
+                                                                    alignment: AlignmentDirectional(0, 0),
+                                                                    child: FittedBox(
+                                                                      fit: BoxFit.fill,
+                                                                      child: FaIcon(
+                                                                        FontAwesomeIcons.batteryEmpty,
+                                                                        color: Color(0xFFE35200),
+                                                                        size: 500,
                                                                       ),
                                                                     ),
-                                                                  ] else ...[
-                                                                    if (globals
-                                                                            .batteryState ==
-                                                                        -1)
-                                                                      const Align(
-                                                                        alignment: AlignmentDirectional(
-                                                                            0,
-                                                                            0),
-                                                                        child:
-                                                                            FittedBox(
-                                                                          fit: BoxFit
-                                                                              .fill,
-                                                                          child:
-                                                                              FaIcon(
-                                                                            FontAwesomeIcons.batteryEmpty,
-                                                                            color:
-                                                                                Color(0xFFE35200),
-                                                                            size:
-                                                                                500,
-                                                                          ),
-                                                                        ),
+                                                                  ),
+                                                                if (globals.batteryState == 0)
+                                                                  const Align(
+                                                                    alignment: AlignmentDirectional(0, 0),
+                                                                    child: FittedBox(
+                                                                      fit: BoxFit.fill,
+                                                                      child: FaIcon(
+                                                                        FontAwesomeIcons.bolt,
+                                                                        color: Color(0xFFDFBB00),
+                                                                        size: 500,
                                                                       ),
-                                                                    if (globals
-                                                                            .batteryState ==
-                                                                        0)
-                                                                      const Align(
-                                                                        alignment: AlignmentDirectional(
-                                                                            0,
-                                                                            0),
-                                                                        child:
-                                                                            FittedBox(
-                                                                          fit: BoxFit
-                                                                              .fill,
-                                                                          child:
-                                                                              FaIcon(
-                                                                            FontAwesomeIcons.bolt,
-                                                                            color:
-                                                                                Color(0xFFDFBB00),
-                                                                            size:
-                                                                                500,
-                                                                          ),
-                                                                        ),
+                                                                    ),
+                                                                  ),
+                                                                if (globals.batteryState == 1)
+                                                                  const Align(
+                                                                    alignment: AlignmentDirectional(0, 0),
+                                                                    child: FittedBox(
+                                                                      fit: BoxFit.fill,
+                                                                      child: FaIcon(
+                                                                        FontAwesomeIcons.batteryFull,
+                                                                        color: Color(0xFF00DF09),
+                                                                        size: 500,
                                                                       ),
-                                                                    if (globals
-                                                                            .batteryState ==
-                                                                        1)
-                                                                      const Align(
-                                                                        alignment: AlignmentDirectional(
-                                                                            0,
-                                                                            0),
-                                                                        child:
-                                                                            FittedBox(
-                                                                          fit: BoxFit
-                                                                              .fill,
-                                                                          child:
-                                                                              FaIcon(
-                                                                            FontAwesomeIcons.batteryFull,
-                                                                            color:
-                                                                                Color(0xFF00DF09),
-                                                                            size:
-                                                                                500,
-                                                                          ),
-                                                                        ),
-                                                                      ),
-                                                                  ]
-                                                                ]),
+                                                                    ),
+                                                                  ),
+                                                              ]
+                                                            ]),
                                                           ),
                                                         ),
                                                       ),
                                                       Padding(
-                                                        padding:
-                                                            const EdgeInsetsDirectional
-                                                                .only(top: 8),
+                                                        padding: const EdgeInsetsDirectional.only(top: 8),
                                                         child: AspectRatio(
                                                           aspectRatio: 16 / 5,
                                                           child: Container(
-                                                            decoration:
-                                                                BoxDecoration(
-                                                              borderRadius:
-                                                                  BorderRadius
-                                                                      .circular(
-                                                                          20),
-                                                              shape: BoxShape
-                                                                  .rectangle,
-                                                              color: const Color(
-                                                                  0xFFF2F2F2),
+                                                            decoration: BoxDecoration(
+                                                              borderRadius: BorderRadius.circular(20),
+                                                              shape: BoxShape.rectangle,
+                                                              color: const Color(0xFFF2F2F2),
                                                             ),
                                                             child: Padding(
-                                                              padding:
-                                                                  const EdgeInsetsDirectional
-                                                                          .fromSTEB(
-                                                                      16,
-                                                                      7,
-                                                                      16,
-                                                                      7),
+                                                              padding: const EdgeInsetsDirectional.fromSTEB(16, 7, 16, 7),
                                                               child: FittedBox(
-                                                                fit: BoxFit
-                                                                    .scaleDown,
-                                                                child: Stack(
-                                                                    children: [
-                                                                      if (globals.connectionState ==
-                                                                              -1 ||
-                                                                          globals.connectionState ==
-                                                                              0) ...[
-                                                                        const Text(
-                                                                          'Unknown',
-                                                                          textAlign:
-                                                                              TextAlign.center,
-                                                                          style:
-                                                                              TextStyle(
-                                                                            color:
-                                                                                Color(0xFFE30000),
-                                                                            fontSize:
-                                                                                100,
-                                                                            fontWeight:
-                                                                                FontWeight.bold,
-                                                                            height:
-                                                                                1.25,
-                                                                          ),
+                                                                fit: BoxFit.scaleDown,
+                                                                child: Stack(children: [
+                                                                  if (globals.connectionState == -1 || globals.connectionState == 0) ...[
+                                                                    const Text(
+                                                                      'Unknown',
+                                                                      textAlign: TextAlign.center,
+                                                                      style: TextStyle(
+                                                                        color: Color(0xFFE30000),
+                                                                        fontSize: 100,
+                                                                        fontWeight: FontWeight.bold,
+                                                                        height: 1.25,
+                                                                      ),
+                                                                    ),
+                                                                  ] else ...[
+                                                                    if (globals.batteryState == -1)
+                                                                      const Text(
+                                                                        'Low battery',
+                                                                        textAlign: TextAlign.center,
+                                                                        style: TextStyle(
+                                                                          color: Color(0xFFE35200),
+                                                                          fontSize: 100,
+                                                                          fontWeight: FontWeight.bold,
+                                                                          height: 1.25,
                                                                         ),
-                                                                      ] else ...[
-                                                                        if (globals.batteryState ==
-                                                                            -1)
-                                                                          const Text(
-                                                                            'Low battery',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style:
-                                                                                TextStyle(
-                                                                              color: Color(0xFFE35200),
-                                                                              fontSize: 100,
-                                                                              fontWeight: FontWeight.bold,
-                                                                              height: 1.25,
-                                                                            ),
-                                                                          ),
-                                                                        if (globals.batteryState ==
-                                                                            0)
-                                                                          const Text(
-                                                                            'Charging',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style:
-                                                                                TextStyle(
-                                                                              color: Color(0xFFDFBB00),
-                                                                              fontSize: 100,
-                                                                              fontWeight: FontWeight.bold,
-                                                                              height: 1.25,
-                                                                            ),
-                                                                          ),
-                                                                        if (globals.batteryState ==
-                                                                            1)
-                                                                          const Text(
-                                                                            'Charged',
-                                                                            textAlign:
-                                                                                TextAlign.center,
-                                                                            style: TextStyle(
-                                                                                color: Color(0xFF00DF09),
-                                                                                fontSize: 100,
-                                                                                fontWeight: FontWeight.bold,
-                                                                                height: 1.25),
-                                                                          ),
-                                                                      ],
-                                                                    ]),
+                                                                      ),
+                                                                    if (globals.batteryState == 0)
+                                                                      const Text(
+                                                                        'Charging',
+                                                                        textAlign: TextAlign.center,
+                                                                        style: TextStyle(
+                                                                          color: Color(0xFFDFBB00),
+                                                                          fontSize: 100,
+                                                                          fontWeight: FontWeight.bold,
+                                                                          height: 1.25,
+                                                                        ),
+                                                                      ),
+                                                                    if (globals.batteryState == 1)
+                                                                      const Text(
+                                                                        'Charged',
+                                                                        textAlign: TextAlign.center,
+                                                                        style: TextStyle(color: Color(0xFF00DF09), fontSize: 100, fontWeight: FontWeight.bold, height: 1.25),
+                                                                      ),
+                                                                  ],
+                                                                ]),
                                                               ),
                                                             ),
                                                           ),
@@ -812,7 +605,7 @@ class HomePageState extends State<HomePage> {
               ]),
             ),
             navbar(context),
-            Dialog(),
+            const Dialog(),
           ],
         ),
       ),
@@ -841,11 +634,12 @@ class ControllerPageState extends State<ControllerPage> {
               child: Column(children: [
                 Expanded(
                   child: Container(
-                      decoration: const BoxDecoration(
-                        color: Color(0xFFE2E2E2),
-                        borderRadius: BorderRadius.all(Radius.circular(35)),
-                      ),
-                      child: Stack(children: [
+                    decoration: const BoxDecoration(
+                      color: Color(0xFFE2E2E2),
+                      borderRadius: BorderRadius.all(Radius.circular(35)),
+                    ),
+                    child: Stack(
+                      children: [
                         Column(
                           children: [
                             Joystick(
@@ -864,51 +658,47 @@ class ControllerPageState extends State<ControllerPage> {
                             ),
                           ],
                         ),
-                        Positioned(
-                          right: MediaQuery.of(context).size.aspectRatio * 20,
-                          top: 0,
-                          bottom: 0,
-                          child: Container(
-                            decoration: const BoxDecoration(
-                              color: Color(0xFFF2F2F2),
-                              shape: BoxShape.circle,
-                            ),
-                            width:
-                                MediaQuery.of(context).size.aspectRatio * 150,
-                            height:
-                                MediaQuery.of(context).size.aspectRatio * 150,
-                            child: IconButton(
-                              icon: Icon(
-                                Icons.open_in_full,
-                                size: MediaQuery.of(context).size.aspectRatio *
-                                    100,
-                                color: const Color(0xFFCC0000),
+                        Opacity(
+                          opacity: 0,
+                          child: Positioned(
+                            right: MediaQuery.of(context).size.aspectRatio * 20,
+                            top: 0,
+                            bottom: 0,
+                            child: Container(
+                              decoration: const BoxDecoration(
+                                color: Color(0xFFF2F2F2),
+                                shape: BoxShape.circle,
                               ),
-                              onPressed: () {
-                                Navigator.push(
-                                    context,
-                                    PageRouteBuilder(
-                                      //pageBuilder: (context, animation, secondaryAnimation) => FullControllerPage(),
-                                      pageBuilder: (context, animation,
-                                              secondaryAnimation) =>
-                                          pages.elementAt(1),
-                                      transitionDuration:
-                                          const Duration(milliseconds: 180),
-                                      transitionsBuilder: (context, animation,
-                                              secondaryAnimation, child) =>
-                                          FadeTransition(
-                                              opacity: animation, child: child),
-                                    ));
-                              },
+                              width: MediaQuery.of(context).size.aspectRatio * 150,
+                              height: MediaQuery.of(context).size.aspectRatio * 150,
+                              child: IconButton(
+                                icon: Icon(
+                                  Icons.open_in_full,
+                                  size: MediaQuery.of(context).size.aspectRatio * 100,
+                                  color: const Color(0xFFCC0000),
+                                ),
+                                onPressed: () {
+                                  Navigator.push(
+                                      context,
+                                      PageRouteBuilder(
+                                        //pageBuilder: (context, animation, secondaryAnimation) => FullControllerPage(),
+                                        pageBuilder: (context, animation, secondaryAnimation) => pages.elementAt(1),
+                                        transitionDuration: const Duration(milliseconds: 180),
+                                        transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
+                                      ));
+                                },
+                              ),
                             ),
                           ),
-                        )
-                      ])),
+                        ),
+                      ],
+                    ),
+                  ),
                 )
               ]),
             ),
             navbar(context),
-            Dialog(),
+            const Dialog(),
           ],
         ),
       ),
@@ -920,10 +710,7 @@ class ControllerPageState extends State<ControllerPage> {
 class CameraPage extends StatefulWidget {
   const CameraPage({
     super.key,
-    required this.camera,
   });
-
-  final CameraDescription camera;
 
   @override
   CameraPageState createState() => CameraPageState();
@@ -935,12 +722,11 @@ class CameraPageState extends State<CameraPage> {
   @override
   void initState() {
     super.initState();
-    // To display the current output from the Camera,
-    // create a CameraController.
+    // To display the camera output, create a CameraController
     globals.cameraController = CameraController(
-      // Get a specific camera from the list of available cameras.
-      widget.camera,
-      // Define the resolution to use.
+      // Use the main camera
+      globals.mainCamera,
+      // Define the resolution to use
       ResolutionPreset.max,
       // Disable audio recording
       enableAudio: false,
@@ -948,7 +734,7 @@ class CameraPageState extends State<CameraPage> {
       imageFormatGroup: ImageFormatGroup.yuv420,
     );
 
-    // Next, initialize the controller. This returns a Future.
+    // Next, initialize the controller which returns a Future
     initializeControllerFuture = globals.cameraController.initialize();
 
     // Load Tensorflow models
@@ -984,21 +770,19 @@ class CameraPageState extends State<CameraPage> {
                     return Stack(children: [
                       Center(
                         child: SizedBox(
-                            key: cameraPreviewWrapper,
-                            height: double.infinity,
-                            width: double.infinity,
-                            child: CameraPreview(globals.cameraController)),
+                          key: cameraPreviewWrapper,
+                          height: double.infinity,
+                          width: double.infinity,
+                          child: CameraPreview(globals.cameraController),
+                        ),
                       ),
                       ValueListenableBuilder(
                           valueListenable: recognitionsNotifier,
                           builder: (context, value, widget) {
-                            final keyContext =
-                                cameraPreviewWrapper.currentContext;
-                            final box =
-                                keyContext!.findRenderObject() as RenderBox;
+                            final keyContext = cameraPreviewWrapper.currentContext;
+                            final box = keyContext!.findRenderObject() as RenderBox;
                             if (value != 0) {
-                              final boxes = displayBoxesAroundRecognizedObjects(
-                                  box.hasSize ? box.size : size);
+                              final boxes = displayBoxesAroundRecognizedObjects(box.hasSize ? box.size : size);
                               isProcessing = false;
                               return Stack(
                                 children: boxes,
@@ -1014,7 +798,7 @@ class CameraPageState extends State<CameraPage> {
                   }
                 }()),
                 navbar(context),
-                Dialog(),
+                const Dialog(),
               ],
             ),
           );
@@ -1041,15 +825,13 @@ Widget navbarItem(IconData icon, int index, dynamic context) {
         }
 
         Navigator.push(
-            context,
-            PageRouteBuilder(
-              pageBuilder: (context, animation, secondaryAnimation) =>
-                  pages.elementAt(index),
-              transitionDuration: const Duration(milliseconds: 180),
-              transitionsBuilder:
-                  (context, animation, secondaryAnimation, child) =>
-                      FadeTransition(opacity: animation, child: child),
-            ));
+          context,
+          PageRouteBuilder(
+            pageBuilder: (context, animation, secondaryAnimation) => pages.elementAt(index),
+            transitionDuration: const Duration(milliseconds: 180),
+            transitionsBuilder: (context, animation, secondaryAnimation, child) => FadeTransition(opacity: animation, child: child),
+          ),
+        );
       },
       child: Padding(
         padding: const EdgeInsetsDirectional.fromSTEB(6, 0, 6, 4),
@@ -1059,11 +841,7 @@ Widget navbarItem(IconData icon, int index, dynamic context) {
               left: const BorderSide(width: 0, color: Color(0x00000000)),
               top: const BorderSide(width: 0, color: Color(0x00000000)),
               right: const BorderSide(width: 0, color: Color(0x00000000)),
-              bottom: BorderSide(
-                  width: MediaQuery.of(context).size.height * 0.004,
-                  color: globals.currentPageIndex == index
-                      ? const Color(0xFFFFFFFF)
-                      : const Color(0x00000000)),
+              bottom: BorderSide(width: MediaQuery.of(context).size.height * 0.004, color: globals.currentPageIndex == index ? const Color(0xFFFFFFFF) : const Color(0x00000000)),
             ),
           ),
           child: Padding(
@@ -1071,9 +849,7 @@ Widget navbarItem(IconData icon, int index, dynamic context) {
             child: Icon(
               icon,
               size: MediaQuery.of(context).size.height * 0.055,
-              color: globals.currentPageIndex == index
-                  ? const Color(0xFFFFFFFF)
-                  : const Color(0xFFE2E2E2),
+              color: globals.currentPageIndex == index ? const Color(0xFFFFFFFF) : const Color(0xFFE2E2E2),
             ),
           ),
         ),
@@ -1121,21 +897,19 @@ Widget navbar(context) {
 
 // ---- Pop up
 String errorToExplanation(error) {
-  String explenation = error;
+  String explanation = error;
 
   if (error.contains("Connection reset by peer")) {
-    explenation = "Connection issues emerged: please restart your Tesla Mini";
+    explanation = "Connection issues emerged: please restart your Tesla Mini";
   }
   if (error.contains("Connection timed out")) {
-    explenation =
-        "Failed to connect: check the network connection to your Tesla Mini";
+    explanation = "Failed to connect: check the network connection to your Tesla Mini";
   }
   if (error.contains("Network is unreachable")) {
-    explenation =
-        "No network connection found: try (re)connecting to the Tesla Mini";
+    explanation = "No network connection found: try (re)connecting to the Tesla Mini";
   }
 
-  return explenation;
+  return explanation;
 }
 
 CupertinoAlertDialog makeDialog(context) {
