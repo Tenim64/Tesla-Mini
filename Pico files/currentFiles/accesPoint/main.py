@@ -31,9 +31,9 @@ uart = None
 led = Pin("LED", Pin.OUT)
 production = False
 # Low battery pin
-lowbatteryPin = Pin(21, Pin.IN)
+lowbatteryPin = Pin(19, Pin.IN)
 # Charging pin
-chargingPin = Pin(19, Pin.IN)
+chargingPin = Pin(21, Pin.IN)
 
 
 # ---------- Debug tools ----------
@@ -163,7 +163,9 @@ def processGetRequest(data_request):
     print("data_request: ", data_request)
     if data_request == "battery":
         lowbattery = not lowbatteryPin.value()
-        charging = not not chargingPin.value()
+        lowbattery = False
+        print(chargingPin.value())
+        charging = not chargingPin.value()
         print("lowbattery: ", lowbattery)
         print("charging: ", charging)
         
